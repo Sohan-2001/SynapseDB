@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SynapseDB Studio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-group">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-text">
+          <span class="logo-title">SynapseDB</span>
+          <span class="logo-badge">STUDIO</span>
+        </div>
+      </div>
+      <div class="connection-status" id="connStatus">
+        <span class="status-dot disconnected" id="statusDot"></span>
+        <span class="status-text" id="statusText">Connecting...</span>
+        <span class="latency-badge" id="pingLatency">-- ms</span>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <button class="btn btn-secondary btn-sm" id="btnFlush">
+        <span>⟳</span> Flush Buffers
+      </button>
+      <button class="btn btn-primary btn-sm" id="btnStartEngine">
+        <span>▶</span> Start Engine
+      </button>
+      <div class="server-config-pill">
+        <span id="cfgHostPort">127.0.0.1:8765</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="queryStudio">
+          <span class="nav-icon">❯_</span>
+          <span class="nav-label">Query Studio</span>
+        </button>
+        <button class="nav-item" data-tab="ingestLab">
+          <span class="nav-icon">⇪</span>
+          <span class="nav-label">Ingest Lab</span>
+        </button>
+        <button class="nav-item" data-tab="schemaExplorer">
+          <span class="nav-icon">▦</span>
+          <span class="nav-label">Schema Explorer</span>
+        </button>
+        <button class="nav-item" data-tab="dataBrowser">
+          <span class="nav-icon">⊞</span>
+          <span class="nav-label">Data Browser</span>
+        </button>
+        <button class="nav-item" data-tab="engineHealth">
+          <span class="nav-icon">♥</span>
+          <span class="nav-label">Engine Health</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="engine-meta">
+          <div class="meta-row">
+            <span class="meta-label">Storage:</span>
+            <span class="meta-val">Columnar SIMD</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">WAL:</span>
+            <span class="meta-val">Durable &lt;1ms</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">SLM:</span>
+            <span class="meta-val">Active</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- ========================================================= -->
+      <!-- TAB 1: QUERY STUDIO                                       -->
+      <!-- ========================================================= -->
+      <section class="tab-panel active" id="tab-queryStudio">
+        <div class="panel-container">
+          <div class="panel-header">
+            <div>
+              <h2>Query & Analytics Studio</h2>
+              <p class="subtitle">Execute exact IEEE mathematical SQL aggregations or natural language queries via SLM</p>
+            </div>
+            <div class="query-mode-toggle">
+              <span class="toggle-label">Mode:</span>
+              <div class="segmented-control">
+                <button class="segment active" id="modeSql">SQL Query</button>
+                <button class="segment" id="modeNl">Natural Language (SLM)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick query suggestions -->
+          <div class="query-chips" id="queryChips">
+            <span class="chip-label">Quick Queries:</span>
+            <button class="chip" data-query="SELECT COUNT(*), SUM(amount), AVG(amount), MIN(amount), MAX(amount) FROM rides">Aggregates (rides)</button>
+            <button class="chip" data-query="SELECT COUNT(*), SUM(amount) FROM rides WHERE amount > 30">Filtered amount > 30</button>
+            <button class="chip" data-query="Total rides spent where amount > 30">NL: Total rides spent</button>
+            <button class="chip" data-query="Count of rides">NL: Count of rides</button>
+          </div>
+
+          <!-- Editor box -->
+          <div class="editor-wrapper">
+            <textarea id="queryInput" class="code-editor" rows="4" placeholder="Enter SQL (e.g. SELECT SUM(amount), COUNT(*) FROM rides WHERE amount > 30) or Natural Language..."></textarea>
+            <div class="editor-footer">
+              <span class="keyboard-hint">Press <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to execute</span>
+              <div class="editor-actions">
+                <button class="btn btn-ghost btn-sm" id="btnClearQuery">Clear</button>
+                <button class="btn btn-primary" id="btnRunQuery">
+                  <span>⚡</span> Run Query
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Execution Stats Bar -->
+          <div class="stats-bar hidden" id="queryStatsBar">
+            <div class="stat-item">
+              <span class="stat-label">Execution Time</span>
+              <span class="stat-value highlight" id="statExecTime">-- µs</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Rows Returned</span>
+              <span class="stat-value" id="statRowCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Chunks Scanned</span>
+              <span class="stat-value" id="statChunksScanned">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Zone Map Pruned</span>
+              <span class="stat-value" id="statChunksPruned">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">TCP Roundtrip</span>
+              <span class="stat-value" id="statTcpTime">-- ms</span>
+            </div>
+          </div>
+
+          <!-- Results Grid -->
+          <div class="results-card">
+            <div class="results-header">
+              <h3>Result Set</h3>
+              <div class="results-tools">
+                <button class="btn btn-ghost btn-sm" id="btnExportJson">Copy JSON</button>
+              </div>
+            </div>
+            <div class="table-scroll-container" id="tableContainer">
+              <div class="empty-state">
+                <div class="empty-icon">📊</div>
+                <div class="empty-title">No query executed yet</div>
+                <div class="empty-desc">Type a query above or click a quick suggestion to view columnar results.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 2: INGESTION LAB                                      -->
+      <!-- ========================================================= -->
+      <section class="tab-panel" id="tab-ingestLab">
+        <div class="panel-container">
+          <div class="panel-header">
+            <div>
+              <h2>Ingestion Lab</h2>
+              <p class="subtitle">Push JSON, messy logs, or unformatted text with immediate sub-millisecond WAL durability</p>
+            </div>
+          </div>
+
+          <div class="ingest-grid">
+            <!-- Left: Push Form -->
+            <div class="card">
+              <div class="card-header-row" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">Custom Data Ingestion</h3>
+                <span class="status-pill connected" style="font-size: 11px;">Your Custom Input</span>
+              </div>
+              <p class="card-desc">Type your own record, or paste a <strong>batch</strong> (JSON array <code>[...]</code> or multi-line logs).</p>
+
+              <div class="form-group">
+                <label for="ingestTable">Target Table</label>
+                <input type="text" id="ingestTable" class="input-text" value="rides" placeholder="e.g. rides, events, logs">
+              </div>
+
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="ingestPayload">Raw Payload (Single JSON, JSON Array, or Log)</label>
+                  <div class="payload-templates">
+                    <button class="template-btn" id="tmplJson">JSON Ride</button>
+                    <button class="template-btn" id="tmplBatch">JSON Array (Batch)</button>
+                    <button class="template-btn" id="tmplSynonym">Synonym Cost</button>
+                    <button class="template-btn" id="tmplLog">Messy Driver Log</button>
+                  </div>
+                </div>
+                <textarea id="ingestPayload" class="code-editor" rows="5">{"fare": 45.50, "user_id": 1001, "driver": "Alice"}</textarea>
+              </div>
+
+              <div class="form-actions">
+                <button class="btn btn-primary" id="btnPushRecord">
+                  <span>📥</span> Push to SynapseDB (Single or Batch)
+                </button>
+              </div>
+
+              <!-- Push Result Card -->
+              <div class="ack-card hidden" id="pushAckCard">
+                <div class="ack-header">
+                  <span class="ack-badge" id="ackTitle">WAL DURABLE ACK</span>
+                  <span class="ack-time" id="ackLatency">0.85 ms</span>
+                </div>
+                <div class="ack-body">
+                  <div class="ack-row">
+                    <span id="ackRowLabel">Assigned 64-bit RowID:</span>
+                    <strong class="rowid-val" id="ackRowId">#--</strong>
+                  </div>
+                  <div class="ack-row">
+                    <span>Disk State:</span>
+                    <span class="text-success">Synchronously fsynced to active.wal</span>
+                  </div>
+                  <div class="ack-row">
+                    <span>Ring Buffer:</span>
+                    <span id="ackBufferDesc">Queued for micro-batch columnar ingestion</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Bulk Ingest & Generator -->
+            <div class="card">
+              <div class="card-header-row" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 16px;">Synthetic Stress Generator</h3>
+                <span class="status-pill" style="font-size: 11px; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">Dummy Test Data</span>
+              </div>
+              <p class="card-desc"><strong>No input field needed:</strong> Generates 25–250 simulated transactions automatically in code to benchmark write throughput without manual typing.</p>
+
+              <div class="form-group">
+                <label for="batchCount">Synthetic Records to Generate</label>
+                <select id="batchCount" class="input-select">
+                  <option value="25">25 synthetic records</option>
+                  <option value="50" selected>50 synthetic records</option>
+                  <option value="100">100 synthetic records</option>
+                  <option value="250">250 synthetic records</option>
+                </select>
+              </div>
+
+              <button class="btn btn-secondary" id="btnRunBulk">
+                <span>⚡</span> Ingest Synthetic Batch (Benchmark)
+              </button>
+
+              <div class="progress-container hidden" id="bulkProgressBox">
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" id="bulkProgressBar"></div>
+                </div>
+                <div class="progress-meta">
+                  <span id="bulkProgressText">Ingesting 0 / 50...</span>
+                  <span id="bulkAvgLatency">Avg: -- ms</span>
+                </div>
+              </div>
+
+              <div class="bulk-stats hidden" id="bulkStatsCard">
+                <h4>Batch Ingestion Summary</h4>
+                <div class="stat-grid-compact">
+                  <div>
+                    <span class="lbl">Total Ingested:</span>
+                    <span class="val" id="bulkTotal">50</span>
+                  </div>
+                  <div>
+                    <span class="lbl">Median Latency:</span>
+                    <span class="val text-success" id="bulkMedian">0.82 ms</span>
+                  </div>
+                  <div>
+                    <span class="lbl">Flush Status:</span>
+                    <span class="val" id="bulkFlushStatus">Drained to Memory</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 3: SCHEMA EXPLORER                                    -->
+      <!-- ========================================================= -->
+      <section class="tab-panel" id="tab-schemaExplorer">
+        <div class="panel-container">
+          <div class="panel-header">
+            <div>
+              <h2>Dynamic Schema Catalog</h2>
+              <p class="subtitle">Lock-free schema evolution, automatic type widening, and synonym dictionary mappings</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnRefreshSchema">
+              <span>⟳</span> Refresh Catalog
+            </button>
+          </div>
+
+          <!-- Table Cards -->
+          <div class="table-cards-grid" id="schemaTablesGrid">
+            <div class="empty-state">
+              <div class="empty-icon">▦</div>
+              <div class="empty-title">Loading Schema...</div>
+            </div>
+          </div>
+
+          <!-- Synonyms Dictionary Card -->
+          <div class="card mt-4">
+            <div class="card-header-flex">
+              <div>
+                <h3>Canonical Synonym Resolution Dictionary</h3>
+                <p class="card-desc">Automatically maps heterogeneous aliases and currencies into unified physical columns</p>
+              </div>
+            </div>
+            <div class="synonym-grid">
+              <div class="synonym-pill">
+                <span class="alias">"fare"</span>
+                <span class="arrow">➔</span>
+                <span class="canonical">amount (Float64)</span>
+              </div>
+              <div class="synonym-pill">
+                <span class="alias">"cost"</span>
+                <span class="arrow">➔</span>
+                <span class="canonical">amount (Float64)</span>
+              </div>
+              <div class="synonym-pill">
+                <span class="alias">"price"</span>
+                <span class="arrow">➔</span>
+                <span class="canonical">amount (Float64)</span>
+              </div>
+              <div class="synonym-pill">
+                <span class="alias">"toll"</span>
+                <span class="arrow">➔</span>
+                <span class="canonical">amount (Float64)</span>
+              </div>
+              <div class="synonym-pill">
+                <span class="alias">"$[0-9.]+" (Regex)</span>
+                <span class="arrow">➔</span>
+                <span class="canonical">amount (Float64)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB: DATA BROWSER (TABLES & JSON)                         -->
+      <!-- ========================================================= -->
+      <section class="tab-panel" id="tab-dataBrowser">
+        <div class="panel-container">
+          <div class="panel-header">
+            <div>
+              <h2>All Tables Data Browser</h2>
+              <p class="subtitle">Inspect, search, and export live records across all tables in formatted Table Grid or raw JSON</p>
+            </div>
+            <div class="browser-header-actions">
+              <div class="segmented-control" id="dataViewToggle">
+                <button class="segment active" id="btnViewTable">⊞ Table View</button>
+                <button class="segment" id="btnViewJson">{ } JSON View</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Selection & Toolbar -->
+          <div class="browser-toolbar">
+            <div class="toolbar-left">
+              <span class="toolbar-label">Table:</span>
+              <div class="table-pills-list" id="browserTablePills">
+                <span class="toolbar-hint">Loading tables...</span>
+              </div>
+            </div>
+            <div class="toolbar-right">
+              <input type="text" id="browserSearchInput" class="input-text input-sm" placeholder="Filter rows in table..." style="min-width: 170px;">
+              <select id="browserLimitSelect" class="input-select input-sm">
+                <option value="50">Limit 50</option>
+                <option value="100" selected>Limit 100</option>
+                <option value="500">Limit 500</option>
+                <option value="10000">All Rows</option>
+              </select>
+              <button class="btn btn-secondary btn-sm" id="btnRefreshBrowser">
+                <span>⟳</span> Refresh
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btnCopyBrowserJson">
+                <span>📋</span> Copy JSON
+              </button>
+              <button class="btn btn-secondary btn-sm" id="btnExportCsv">
+                <span>⬇</span> Export CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Meta Info Bar -->
+          <div class="browser-meta-bar" id="browserMetaBar">
+            <div class="browser-meta-item">
+              <span class="lbl">Active Table:</span>
+              <strong class="val highlight" id="metaTableName">--</strong>
+            </div>
+            <div class="browser-meta-item">
+              <span class="lbl">Rows Loaded:</span>
+              <span class="val" id="metaRowCount">0</span>
+            </div>
+            <div class="browser-meta-item">
+              <span class="lbl">Columns:</span>
+              <span class="val" id="metaColCount">0</span>
+            </div>
+            <div class="browser-meta-item">
+              <span class="lbl">Scan Latency:</span>
+              <span class="val text-success" id="metaScanTime">-- µs</span>
+            </div>
+          </div>
+
+          <!-- Main View Container: Table vs JSON -->
+          <div class="browser-content-card">
+            <!-- Table View -->
+            <div class="table-scroll-container" id="browserTableContainer">
+              <div class="empty-state">
+                <div class="empty-icon">⊞</div>
+                <div class="empty-title">Select a table to browse records</div>
+                <div class="empty-desc">Click any table above or push records in the Ingestion Lab to browse data.</div>
+              </div>
+            </div>
+
+            <!-- JSON View (hidden by default) -->
+            <div class="json-viewer-container hidden" id="browserJsonContainer">
+              <pre class="json-code" id="browserJsonPre">[]</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================= -->
+      <!-- TAB 4: ENGINE HEALTH                                      -->
+      <!-- ========================================================= -->
+      <section class="tab-panel" id="tab-engineHealth">
+        <div class="panel-container">
+          <div class="panel-header">
+            <div>
+              <h2>Engine Health & Telemetry</h2>
+              <p class="subtitle">Hardware acceleration, storage tier metrics, and wire server configuration</p>
+            </div>
+            <button class="btn btn-primary btn-sm" id="btnTestPing">
+              <span>♥</span> Test Ping
+            </button>
+          </div>
+
+          <div class="health-grid">
+            <div class="health-card">
+              <div class="health-card-icon">⚡</div>
+              <div class="health-card-body">
+                <span class="health-card-label">Engine Version</span>
+                <strong class="health-card-val" id="healthVersion">SynapseDB v0.1.0</strong>
+                <span class="health-card-sub">Rust Tokio Native Wire Server</span>
+              </div>
+            </div>
+
+            <div class="health-card">
+              <div class="health-card-icon">💾</div>
+              <div class="health-card-body">
+                <span class="health-card-label">WAL Durability</span>
+                <strong class="health-card-val text-success">Active (Append-Only)</strong>
+                <span class="health-card-sub">Binary CRC32 + Immediate fsync</span>
+              </div>
+            </div>
+
+            <div class="health-card">
+              <div class="health-card-icon">📊</div>
+              <div class="health-card-body">
+                <span class="health-card-label">Memory Columnar Storage</span>
+                <strong class="health-card-val">Arrow-Style Chunks</strong>
+                <span class="health-card-sub">SIMD Scans + Sparse Zone Maps</span>
+              </div>
+            </div>
+
+            <div class="health-card">
+              <div class="health-card-icon">🧠</div>
+              <div class="health-card-body">
+                <span class="health-card-label">SLM Worker Pool</span>
+                <strong class="health-card-val text-accent">Micro-Batch Ring Buffer</strong>
+                <span class="health-card-sub">8–32 records / 20ms drain timeout</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <h3>Live Telemetry Output</h3>
+            <pre class="log-viewer" id="engineLogOutput">Connecting to SynapseDB wire server on 127.0.0.1:8765...</pre>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

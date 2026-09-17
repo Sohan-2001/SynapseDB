@@ -1,0 +1,9 @@
+target/
+.git/
+.cargo/
+data/
+data_bench/
+target/data_test/
+*.tmp
+*.log
+scripts/__pycache__/

@@ -1,0 +1,21 @@
+{
+  "name": "synapsedb-studio",
+  "version": "1.0.0",
+  "description": "Desktop Windows Studio for SynapseDB custom database engine",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "synapsedb",
+    "database",
+    "columnar",
+    "electron",
+    "studio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

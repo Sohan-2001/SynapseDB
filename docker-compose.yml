@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  synapsedb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: synapsedb-server
+    ports:
+      - "8765:8765"
+    volumes:
+      - synapsedb_data:/data
+    environment:
+      - SYNAPSE_ADDR=0.0.0.0:8765
+      - SYNAPSE_DATA_DIR=/data
+      - RUST_LOG=info
+    restart: unless-stopped
+
+volumes:
+  synapsedb_data:

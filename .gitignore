@@ -1,0 +1,35 @@
+﻿# Rust build artifacts
+target/
+**/*.rs.bk
+*.pdb
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+synapsedb.exe
+
+# Node.js dependencies & Electron dist
+desktop/node_modules/
+desktop/dist/
+dist/
+
+# SynapseDB runtime data & WAL storage
+data/
+*.wal
+*.seg
+*.parquet
+
+# Environment & local logs
+.env
+.env.local
+*.log
+scratch/
+
+# OS / Editor files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
