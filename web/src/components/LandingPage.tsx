@@ -670,13 +670,13 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
           <div className="lg:col-span-6 flex flex-col text-left">
             
             {/* Visual Mode Selector: Plain English vs Under the Hood */}
-            <div className="inline-flex p-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono mb-5 self-start shadow-2xs">
+            <div className="inline-flex p-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-sans mb-5 self-start shadow-2xs">
               <button
                 onClick={() => setExplainMode("simple")}
                 className={`px-3.5 py-1.5 rounded-full transition flex items-center gap-1.5 ${
                   explainMode === "simple"
                     ? "bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80"
-                    : "text-slate-500 hover:text-slate-900"
+                    : "text-slate-500 hover:text-slate-900 font-medium"
                 }`}
               >
                 <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
@@ -687,7 +687,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                 className={`px-3.5 py-1.5 rounded-full transition flex items-center gap-1.5 ${
                   explainMode === "tech"
                     ? "bg-slate-900 text-white font-bold shadow-xs"
-                    : "text-slate-500 hover:text-slate-900"
+                    : "text-slate-500 hover:text-slate-900 font-medium"
                 }`}
               >
                 <Terminal className="w-3.5 h-3.5 text-blue-400" />
@@ -701,36 +701,44 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
             {explainMode === "simple" ? (
               <>
-                <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-blue-600 tracking-tight leading-tight">
-                  The smart database that speaks human.
+                <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug font-sans">
+                  The database that speaks human.
                 </h2>
 
-                <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg">
-                  Drop in your data without writing schemas, ask questions in normal everyday English, and get instant answers in microseconds.
+                <p className="mt-2.5 text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg font-sans">
+                  Drop in your raw data without blueprints, ask questions in everyday English, and get answers in microseconds.
                 </p>
 
-                {/* Sleek roundish pills */}
-                <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-slate-700 max-w-lg">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    Zero table blueprints needed
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
-                    <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    Plain English query compiler
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
-                    <span className="w-2 h-2 rounded-full bg-purple-500" />
-                    Runs 100% locally on your laptop
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    $0 cloud AI bill forever
-                  </span>
+                {/* Direct key points in normal font */}
+                <div className="mt-5 space-y-2 text-xs sm:text-sm text-slate-700 max-w-lg font-sans">
+                  <div className="flex items-start gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="text-emerald-600 font-bold mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900">Zero setup or schemas:</strong> Just dump JSON data — no tables to design beforehand.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900">Ask questions naturally:</strong> Type in plain English without learning complex SQL.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="text-purple-600 font-bold mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900">Microsecond calculations:</strong> Parallel engine crunches 1,000,000 numbers in 4.2 microseconds.
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                    <span className="text-amber-600 font-bold mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900">100% Private on your laptop:</strong> Works offline with $0 cloud bills forever.
+                    </div>
+                  </div>
                 </div>
 
-                {/* Roundish Action Buttons */}
-                <div className="mt-7 flex flex-wrap items-center gap-3">
+                {/* Roundish Action Buttons with normal font */}
+                <div className="mt-7 flex flex-wrap items-center gap-3 font-sans">
                   <a
                     href="#playground"
                     className="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm transition flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
@@ -750,7 +758,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
               </>
             ) : (
               <>
-                <p className="mt-3 text-xl sm:text-2xl font-bold text-[#1F2937] tracking-tight">
+                <p className="mt-3 text-xl sm:text-2xl font-bold text-[#1F2937] tracking-tight font-mono">
                   Zero-DDL columnar execution for changing data.
                 </p>
 
@@ -796,106 +804,196 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
           </div>
 
-          {/* RIGHT SIDE: LIVE QUERY CONSOLE (With "What just happened" breakdown) */}
+          {/* RIGHT SIDE: LIVE QUERY CONSOLE (Dual-Layer: Friendly Card vs Dark Hacker Terminal) */}
           <div className="lg:col-span-6">
-            <div className="rounded-lg border border-[#1E293B] bg-[#0B0F19] text-[#F1F5F9] font-mono text-xs shadow-md overflow-hidden flex flex-col">
-              
-              {/* Terminal Title Bar */}
-              <div className="bg-[#111827] border-b border-[#1E293B] px-4 py-2.5 flex items-center justify-between text-[11px] text-[#94A3B8]">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 font-bold">synapsedb://playground/rides</span>
-                  <span className="text-[10px] px-1.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                    Interactive
+            {explainMode === "simple" ? (
+              /* Plain English Mode: Friendly Consumer/Business Card with Normal Fonts */
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-md text-slate-800 font-sans space-y-4">
+                
+                {/* Card Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="font-bold text-sm text-slate-900">Live Demo: 1,000,000 Sample Rides</span>
+                  </div>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">
+                    No Code or SQL Needed
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>1,000,000 rows in memory</span>
-                </div>
-              </div>
 
-              {/* Console Body */}
-              <div className="p-4 space-y-3.5">
-                
-                {/* Query Input Prompt */}
-                <div>
-                  <div className="flex items-center justify-between text-[#64748B] text-[10px] uppercase tracking-wider mb-1">
-                    <span>Ask Any Question</span>
-                    <span className="text-blue-400">Natural Language or SQL</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-[#06080F] border border-[#1E293B] rounded p-2">
-                    <span className="text-blue-400 font-bold">&gt;</span>
+                {/* Search Bar */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Ask any question in everyday English:
+                  </label>
+                  <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition">
                     <input
                       type="text"
                       value={heroQueryInput}
                       onChange={(e) => setHeroQueryInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleRunHeroQuery()}
-                      className="flex-1 bg-transparent text-[#F8FAFC] font-mono text-xs focus:outline-none"
+                      placeholder="e.g. What is the average fare for rides?"
+                      className="flex-1 bg-transparent px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none font-sans"
                     />
                     <button
                       onClick={handleRunHeroQuery}
                       disabled={heroRunning}
-                      className="px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition disabled:opacity-50 shrink-0 flex items-center gap-1"
+                      className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition disabled:opacity-50 flex items-center gap-1.5 shadow-xs shrink-0"
                     >
                       <Play className="w-3 h-3 fill-current" />
-                      <span>{heroRunning ? "Scanning..." : "Execute"}</span>
+                      <span>{heroRunning ? "Calculating..." : "Ask Database"}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Behind-the-Scenes 3-Step Visual Tracker */}
-                <div className="p-2.5 rounded bg-[#06080F] border border-[#1E293B] text-[11px] space-y-1.5">
-                  <div className="text-[#64748B] text-[10px] uppercase tracking-wider">
-                    BEHIND THE SCENES EXECUTION STEPS:
+                {/* Simple 3-Step Explanation in Points */}
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+                  <div className="font-semibold text-slate-700 text-[11px] uppercase tracking-wide">
+                    How SynapseDB answers so fast:
                   </div>
-                  <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
-                    <div className={`p-1.5 rounded border ${heroStep >= 1 ? "bg-blue-950/60 border-blue-600 text-blue-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
-                      1. AI Translates Intent
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className={`p-2 rounded-lg border transition ${heroStep >= 1 ? "bg-blue-50 border-blue-300 text-blue-900 font-semibold" : "bg-white border-slate-200 text-slate-400"}`}>
+                      1. Reads Question
                     </div>
-                    <div className={`p-1.5 rounded border ${heroStep >= 2 ? "bg-purple-950/60 border-purple-600 text-purple-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
-                      2. Skips 80% Unneeded Data
+                    <div className={`p-2 rounded-lg border transition ${heroStep >= 2 ? "bg-purple-50 border-purple-300 text-purple-900 font-semibold" : "bg-white border-slate-200 text-slate-400"}`}>
+                      2. Skips Waste Data
                     </div>
-                    <div className={`p-1.5 rounded border ${heroStep >= 3 ? "bg-emerald-950/60 border-emerald-600 text-emerald-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
-                      3. SIMD Vector Aggregation
+                    <div className={`p-2 rounded-lg border transition ${heroStep >= 3 ? "bg-emerald-50 border-emerald-300 text-emerald-900 font-semibold" : "bg-white border-slate-200 text-slate-400"}`}>
+                      3. Instant Math
                     </div>
                   </div>
                 </div>
 
-                {/* Result Block */}
-                <div className="pt-2 border-t border-[#1E293B]">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[#64748B] text-[10px] uppercase tracking-wider">RESULT ANSWER</span>
-                    <span className="text-emerald-400 text-[10px] font-mono font-semibold">Calculated in 4.2 µs</span>
-                  </div>
-                  <div className="flex items-baseline justify-between bg-[#06080F] border border-[#1E293B] rounded p-3">
-                    <div>
-                      <span className="text-[#94A3B8] text-xs block">Average Fare (1M Records)</span>
-                      <span className="text-[10px] text-slate-500">plan: scan(fare) → sum → avg</span>
-                    </div>
-                    <span className="text-3xl font-bold text-emerald-400 font-mono">${heroResultValue}</span>
-                  </div>
-                </div>
-
-                {/* Performance Footer */}
-                <div className="bg-[#111827] -mx-4 -mb-4 p-2.5 px-4 border-t border-[#1E293B] flex flex-wrap items-center justify-between text-[11px] text-[#94A3B8]">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="w-3 h-3 text-blue-400" />
-                    <span>Speed:</span>
-                    <strong className="text-emerald-400 font-bold">{heroExecTime}</strong>
-                    <span className="text-[#64748B]">(0.0000042 s)</span>
-                  </div>
+                {/* Result Block with normal readable font */}
+                <div className="p-4 bg-gradient-to-r from-blue-50/60 to-emerald-50/60 border border-emerald-200 rounded-xl flex items-center justify-between">
                   <div>
-                    <span>Dataset: </span>
-                    <strong className="text-white">{heroRowCount} records</strong>
+                    <span className="text-xs font-semibold text-slate-600 block">Average Ride Price (1 Million Records):</span>
+                    <span className="text-xs text-emerald-700 font-medium mt-0.5 block">
+                      Calculated in {heroExecTime} (faster than a human blink)
+                    </span>
                   </div>
-                  <div className="text-blue-400 font-medium">
-                    100% Offline (Local CPU)
-                  </div>
+                  <span className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                    ${heroResultValue}
+                  </span>
+                </div>
+
+                {/* Direct Key Benefits */}
+                <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between text-xs text-slate-600 gap-2">
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    Speed: <strong className="text-slate-900 font-semibold">{heroExecTime}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    Dataset: <strong className="text-slate-900 font-semibold">{heroRowCount} records</strong>
+                  </span>
+                  <span className="text-emerald-700 font-semibold">
+                    ✓ 100% Local &amp; Private
+                  </span>
                 </div>
 
               </div>
+            ) : (
+              /* Under the Hood Mode: Exact Dark Systems Terminal */
+              <div className="rounded-lg border border-[#1E293B] bg-[#0B0F19] text-[#F1F5F9] font-mono text-xs shadow-md overflow-hidden flex flex-col">
+                
+                {/* Terminal Title Bar */}
+                <div className="bg-[#111827] border-b border-[#1E293B] px-4 py-2.5 flex items-center justify-between text-[11px] text-[#94A3B8]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-emerald-400 font-bold">synapsedb://playground/rides</span>
+                    <span className="text-[10px] px-1.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+                      Interactive
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>1,000,000 rows in memory</span>
+                  </div>
+                </div>
 
-            </div>
+                {/* Console Body */}
+                <div className="p-4 space-y-3.5">
+                  
+                  {/* Query Input Prompt */}
+                  <div>
+                    <div className="flex items-center justify-between text-[#64748B] text-[10px] uppercase tracking-wider mb-1">
+                      <span>Ask Any Question</span>
+                      <span className="text-blue-400">Natural Language or SQL</span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-[#06080F] border border-[#1E293B] rounded p-2">
+                      <span className="text-blue-400 font-bold">&gt;</span>
+                      <input
+                        type="text"
+                        value={heroQueryInput}
+                        onChange={(e) => setHeroQueryInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleRunHeroQuery()}
+                        className="flex-1 bg-transparent text-[#F8FAFC] font-mono text-xs focus:outline-none"
+                      />
+                      <button
+                        onClick={handleRunHeroQuery}
+                        disabled={heroRunning}
+                        className="px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition disabled:opacity-50 shrink-0 flex items-center gap-1"
+                      >
+                        <Play className="w-3 h-3 fill-current" />
+                        <span>{heroRunning ? "Scanning..." : "Execute"}</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Behind-the-Scenes 3-Step Visual Tracker */}
+                  <div className="p-2.5 rounded bg-[#06080F] border border-[#1E293B] text-[11px] space-y-1.5">
+                    <div className="text-[#64748B] text-[10px] uppercase tracking-wider">
+                      BEHIND THE SCENES EXECUTION STEPS:
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                      <div className={`p-1.5 rounded border ${heroStep >= 1 ? "bg-blue-950/60 border-blue-600 text-blue-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
+                        1. AI Translates Intent
+                      </div>
+                      <div className={`p-1.5 rounded border ${heroStep >= 2 ? "bg-purple-950/60 border-purple-600 text-purple-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
+                        2. Skips 80% Unneeded Data
+                      </div>
+                      <div className={`p-1.5 rounded border ${heroStep >= 3 ? "bg-emerald-950/60 border-emerald-600 text-emerald-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
+                        3. SIMD Vector Aggregation
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Result Block */}
+                  <div className="pt-2 border-t border-[#1E293B]">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[#64748B] text-[10px] uppercase tracking-wider">RESULT ANSWER</span>
+                      <span className="text-emerald-400 text-[10px] font-mono font-semibold">Calculated in 4.2 µs</span>
+                    </div>
+                    <div className="flex items-baseline justify-between bg-[#06080F] border border-[#1E293B] rounded p-3">
+                      <div>
+                        <span className="text-[#94A3B8] text-xs block">Average Fare (1M Records)</span>
+                        <span className="text-[10px] text-slate-500">plan: scan(fare) → sum → avg</span>
+                      </div>
+                      <span className="text-3xl font-bold text-emerald-400 font-mono">${heroResultValue}</span>
+                    </div>
+                  </div>
+
+                  {/* Performance Footer */}
+                  <div className="bg-[#111827] -mx-4 -mb-4 p-2.5 px-4 border-t border-[#1E293B] flex flex-wrap items-center justify-between text-[11px] text-[#94A3B8]">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-3 h-3 text-blue-400" />
+                      <span>Speed:</span>
+                      <strong className="text-emerald-400 font-bold">{heroExecTime}</strong>
+                      <span className="text-[#64748B]">(0.0000042 s)</span>
+                    </div>
+                    <div>
+                      <span>Dataset: </span>
+                      <strong className="text-white">{heroRowCount} records</strong>
+                    </div>
+                    <div className="text-blue-400 font-medium">
+                      100% Offline (Local CPU)
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            )}
           </div>
 
         </div>
@@ -908,12 +1006,16 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
         <div className="max-w-7xl mx-auto space-y-8">
           
           <div className="max-w-3xl">
-            <div className="text-xs font-mono text-blue-600 font-bold mb-1">DATABASE 101 / VISUAL EXPLAINER</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold mb-2">
+              <span>📘 Section 1</span>
+              <span>·</span>
+              <span>Visual Guide for Everyone</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight font-sans">
               Why Traditional Databases Are Slow at Math, and How SynapseDB Fixes It
             </h2>
-            <p className="text-sm text-[#4B5563] mt-2 leading-relaxed">
-              If you’ve never built a database before, here is the secret: <strong>it all comes down to how data is stored in memory.</strong>
+            <p className="text-sm text-[#4B5563] mt-2 leading-relaxed font-sans">
+              If you’ve never built a database before, here is the secret: <strong>it all comes down to how data is stored in computer memory.</strong>
             </p>
           </div>
 
@@ -921,23 +1023,35 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
             {/* 1. TRADITIONAL ROW STORE (The Phonebook Dilemma) */}
-            <div className="p-6 rounded-lg border border-[#E5E7EB] bg-white space-y-4">
+            <div className="p-6 rounded-2xl border border-[#E5E7EB] bg-white space-y-4 shadow-2xs font-sans">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono text-red-600 uppercase font-bold tracking-wider">TRADITIONAL (POSTGRES / MYSQL)</span>
+                  <span className="text-[11px] text-red-600 uppercase font-bold tracking-wider">TRADITIONAL (POSTGRES / MYSQL)</span>
                   <h3 className="text-lg font-bold text-[#111827]">Row-Store: The &quot;Sandwich&quot; Dilemma</h3>
                 </div>
-                <span className="text-xs px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-medium">
-                  Slow Aggregations
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 font-semibold">
+                  Slow Math
                 </span>
               </div>
 
-              <p className="text-xs text-[#4B5563] leading-relaxed">
-                Traditional databases store data row-by-row. If you want to compute the average <code>fare</code>, the computer is forced to read every person&apos;s name, ID, and location off disk just to extract the price!
-              </p>
+              {/* Direct Bullet Points */}
+              <div className="space-y-1.5 text-xs text-[#4B5563]">
+                <div className="flex items-start gap-2">
+                  <span className="text-red-500 font-bold">✕</span>
+                  <span><strong>Reads entire rows:</strong> If you ask for average price, it still reads every person&apos;s name, ID, and city off disk.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-red-500 font-bold">✕</span>
+                  <span><strong>Wastes 75% memory:</strong> Clogs up RAM and disk bandwidth with data you never asked for.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-red-500 font-bold">✕</span>
+                  <span><strong>Slow record-by-record:</strong> Like reading an entire phonebook cover-to-cover just to count area codes.</span>
+                </div>
+              </div>
 
               {/* 3D Visual Representation of Row Store */}
-              <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded space-y-2 text-xs font-mono">
+              <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl space-y-2 text-xs font-mono">
                 <div className="text-[10px] text-[#64748B] uppercase">Memory Layout (Horizontal Sandwiches):</div>
                 
                 <div className="p-2 bg-white border border-red-200 rounded shadow-2xs flex items-center justify-between text-[11px]">
@@ -962,37 +1076,47 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                 </div>
               </div>
 
-              <div className="p-3 bg-red-50/70 border border-red-200 rounded text-xs text-red-900 space-y-1">
-                <strong>Why this is inefficient:</strong>
-                <p className="text-[11px] text-red-800">
-                  Like reading an entire telephone directory cover-to-cover just to count the number of 555 area codes. 75% of the data read into memory is useless waste.
-                </p>
+              <div className="p-3 bg-red-50/70 border border-red-200 rounded-xl text-xs text-red-900 flex items-center gap-2">
+                <span className="text-base">⚠️</span>
+                <span><strong>Key limitation:</strong> 75% of computer memory is wasted reading unused information.</span>
               </div>
             </div>
 
             {/* 2. SYNAPSEDB COLUMNAR STORE (The Vertical Tube Breakthrough) */}
-            <div className="p-6 rounded-lg border border-blue-600 bg-white space-y-4 shadow-sm relative">
+            <div className="p-6 rounded-2xl border border-blue-600 bg-white space-y-4 shadow-sm relative font-sans">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono text-blue-600 uppercase font-bold tracking-wider">SYNAPSEDB COLUMNAR</span>
+                  <span className="text-[11px] text-blue-600 uppercase font-bold tracking-wider">SYNAPSEDB COLUMNAR</span>
                   <h3 className="text-lg font-bold text-[#111827]">Column-Store: The &quot;Vertical Tube&quot; Breakthrough</h3>
                 </div>
-                <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">
-                  4.2 µs SIMD Scan
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+                  4.2 µs Instant
                 </span>
               </div>
 
-              <p className="text-xs text-[#4B5563] leading-relaxed">
-                SynapseDB automatically groups every single <code>fare</code> together into a single continuous memory vector in RAM. When you ask for the average, the CPU grabs just that one tube and scans 1,000,000 numbers in parallel!
-              </p>
+              {/* Direct Bullet Points */}
+              <div className="space-y-1.5 text-xs text-[#4B5563]">
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span><strong>Reads only what you ask for:</strong> Groups all prices into a single continuous memory tube in RAM.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span><strong>Zero wasted bandwidth:</strong> Names and locations are completely skipped without touching disk.</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-emerald-600 font-bold">✓</span>
+                  <span><strong>Parallel calculations:</strong> Scans 1,000,000 numbers in 4.2 millionths of a second.</span>
+                </div>
+              </div>
 
               {/* 3D Visual Representation of Column Store */}
-              <div className="p-4 bg-[#F0FDF4] border border-emerald-200 rounded space-y-2 text-xs font-mono">
+              <div className="p-4 bg-[#F0FDF4] border border-emerald-200 rounded-xl space-y-2 text-xs font-mono">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-emerald-800 font-bold uppercase">Memory Layout (Vertical Tubes):</span>
                   <button
                     onClick={triggerColumnarScan}
-                    className="text-[10px] px-2 py-0.5 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition"
+                    className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition shadow-2xs font-sans"
                   >
                     {columnarScanning ? "Scanning Tube..." : "Click to Scan Fare Tube"}
                   </button>
@@ -1026,11 +1150,9 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                 </div>
               </div>
 
-              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded text-xs text-blue-900 space-y-1">
-                <strong>Why this is revolutionary:</strong>
-                <p className="text-[11px] text-blue-800">
-                  Like keeping all coins in a separate sorting tube. You don&apos;t have to open a single wallet—you just weigh the tube and have the exact total in 4.2 microseconds.
-                </p>
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2">
+                <span className="text-base">💡</span>
+                <span><strong>Everyday Analogy:</strong> Like sorting coins into coin tubes—you weigh the tube instantly without opening every wallet.</span>
               </div>
             </div>
 
@@ -1046,24 +1168,28 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
         <div className="max-w-7xl mx-auto space-y-10">
           
           <div>
-            <div className="text-xs font-mono text-blue-600 font-bold mb-1">02 / HOW IT WORKS</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              The Journey of a Query: From Raw JSON to Instant Answer
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold mb-2">
+              <span>🔄 Section 2</span>
+              <span>·</span>
+              <span>How It Works (6 Step Flow)</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight font-sans">
+              The Journey of a Query: From Raw Data to Instant Answer
             </h2>
-            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl">
-              Follow the 6 stages of SynapseDB. Click any card to see both the simple real-world analogy and the underlying Rust systems code.
+            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl font-sans">
+              Follow how data moves through SynapseDB. Click any step below to see how it works in plain language and the underlying engine design.
             </p>
           </div>
 
           {/* Interactive Flowchart Nodes */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 font-mono text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 font-sans text-xs">
             {pipelineStages.map((st, idx) => {
               const active = activePipelineStage === idx;
               return (
                 <button
                   key={idx}
                   onClick={() => setActivePipelineStage(idx)}
-                  className={`p-3.5 text-left rounded-lg border transition relative flex flex-col justify-between ${
+                  className={`p-3.5 text-left rounded-xl border transition relative flex flex-col justify-between ${
                     active
                       ? "bg-white border-blue-600 ring-2 ring-blue-600/20 shadow-md"
                       : "bg-[#FAFAF9] border-[#E5E7EB] hover:border-slate-400 hover:bg-white"
@@ -1072,13 +1198,13 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                   <div>
                     <div className="flex items-center justify-between mb-1 text-base">
                       <span>{st.icon}</span>
-                      <span className={`text-[10px] font-bold ${active ? "text-blue-600" : "text-slate-400"}`}>
+                      <span className={`text-[11px] font-bold ${active ? "text-blue-600" : "text-slate-400"}`}>
                         0{idx + 1}
                       </span>
                     </div>
                     <div className="font-bold text-[#111827] text-xs mt-1">{st.title}</div>
                   </div>
-                  <div className="text-[10px] text-blue-600 truncate mt-2 font-medium">
+                  <div className="text-[11px] text-blue-600 truncate mt-2 font-medium">
                     {st.analogyTitle}
                   </div>
                 </button>
@@ -1087,14 +1213,14 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
           </div>
 
           {/* Active Flowchart Detail Card (Dual-Layer: Simple Analogy + Tech) */}
-          <div className="p-6 rounded-lg border border-[#E5E7EB] bg-[#FAFAF9] space-y-6">
+          <div className="p-6 rounded-2xl border border-[#E5E7EB] bg-[#FAFAF9] space-y-6">
             
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* Left Column: Simple Analogy & Plain English */}
-              <div className="lg:col-span-7 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-mono text-blue-600 font-bold">
-                  <span>STAGE 0{activePipelineStage + 1}</span>
+              <div className="lg:col-span-7 space-y-3 font-sans">
+                <div className="flex items-center gap-2 text-xs text-indigo-700 font-bold">
+                  <span className="px-2.5 py-0.5 rounded-full bg-indigo-100">Step 0{activePipelineStage + 1}</span>
                   <span>·</span>
                   <span>{pipelineStages[activePipelineStage].analogyTitle}</span>
                 </div>
@@ -1107,11 +1233,26 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                   {pipelineStages[activePipelineStage].simpleSummary}
                 </p>
 
+                {/* Direct Key Benefit Point */}
+                <div className="space-y-1.5 text-xs text-slate-700 bg-white p-3 rounded-xl border border-slate-200">
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span>
+                    <span><strong>Why it matters:</strong> {
+                      activePipelineStage === 0 ? "You can start saving data right away from websites or mobile apps without upfront database setup." :
+                      activePipelineStage === 1 ? "Zero risk of data loss. Every single byte is stamped to disk with checksum verification." :
+                      activePipelineStage === 2 ? "Automatically recognizes synonyms like 'fare' and 'cost' as the same logical column." :
+                      activePipelineStage === 3 ? "All numbers sit contiguous in computer RAM, allowing the CPU to read them at peak speed." :
+                      activePipelineStage === 4 ? "Translates natural language right on your laptop without sending private data to cloud AI services." :
+                      "Parallel SIMD processing crunches 1,000,000 numbers in 4.2 microseconds."
+                    }</span>
+                  </div>
+                </div>
+
                 {/* Real-World Analogy Callout Box */}
-                <div className="p-3.5 bg-blue-50 border border-blue-200 rounded text-xs text-blue-900 space-y-1">
+                <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 space-y-1">
                   <div className="flex items-center gap-1.5 font-bold text-blue-800 text-[11px] uppercase tracking-wider">
                     <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Real-World Analogy:</span>
+                    <span>Everyday Analogy:</span>
                   </div>
                   <p className="text-xs text-blue-900 leading-relaxed font-sans">
                     {pipelineStages[activePipelineStage].analogy}
@@ -1120,7 +1261,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
               </div>
 
               {/* Right Column: Under-The-Hood Technical Specs & Rust Struct */}
-              <div className="lg:col-span-5 bg-[#0B0F19] text-[#F1F5F9] p-4 rounded-lg font-mono text-xs space-y-3 border border-[#1E293B]">
+              <div className="lg:col-span-5 bg-[#0B0F19] text-[#F1F5F9] p-4 rounded-xl font-mono text-xs space-y-3 border border-[#1E293B]">
                 <div className="flex items-center justify-between text-[11px] pb-2 border-b border-[#1E293B] text-[#94A3B8]">
                   <span>UNDER THE HOOD (RUST ENGINE)</span>
                   <span className="text-emerald-400 font-bold">{pipelineStages[activePipelineStage].tech}</span>
@@ -1154,38 +1295,42 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
           {/* Section Header */}
           <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <div className="text-xs font-mono text-blue-600 font-bold mb-1">01 / PLAYGROUND</div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold mb-2">
+                <span>🧪 Section 3</span>
+                <span>·</span>
+                <span>Interactive Playground (Try It Live)</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight font-sans">
                 Interactive Engine Console
               </h2>
-              <p className="text-sm text-[#4B5563] mt-1">
+              <p className="text-sm text-[#4B5563] mt-1 font-sans">
                 Test the engine yourself. Ask questions in human English or SQL, browse persisted records, or simulate incoming data streams.
               </p>
             </div>
 
             {/* Module Switcher Tabs */}
-            <div className="flex border border-[#E5E7EB] rounded-md p-1 bg-white text-xs font-mono">
+            <div className="flex border border-[#E5E7EB] rounded-xl p-1 bg-white text-xs font-sans">
               <button
                 onClick={() => setPlaygroundTab("query")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "query" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3.5 py-1.5 rounded-lg transition font-medium ${playgroundTab === "query" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 Query Studio
               </button>
               <button
                 onClick={() => setPlaygroundTab("data")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "data" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3.5 py-1.5 rounded-lg transition font-medium ${playgroundTab === "data" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 Data Browser
               </button>
               <button
                 onClick={() => setPlaygroundTab("ingest")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "ingest" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3.5 py-1.5 rounded-lg transition font-medium ${playgroundTab === "ingest" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 Ingestion Lab
               </button>
               <button
                 onClick={() => setPlaygroundTab("wal")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "wal" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3.5 py-1.5 rounded-lg transition font-medium ${playgroundTab === "wal" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 WAL Inspector
               </button>
@@ -1561,13 +1706,33 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
         <div className="max-w-7xl mx-auto space-y-8">
           
           <div>
-            <div className="text-xs font-mono text-blue-600 font-bold mb-1">03 / AI QUERY COMPILATION</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              How English Questions Turn into CPU Microsecond Scans
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-xs font-semibold mb-2">
+              <span>🧠 Section 4</span>
+              <span>·</span>
+              <span>AI Query Translation</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight font-sans">
+              How Everyday Questions Turn into Microsecond CPU Calculations
             </h2>
             <p className="text-sm text-[#4B5563] mt-1 max-w-2xl font-sans">
-              Unlike cloud chatbots that send your data across the internet to OpenAI, SynapseDB has a <strong>lightweight AI model built right inside the database</strong> that compiles English to query plans in 12 milliseconds with 100% privacy.
+              Unlike cloud chatbots that send your private data over the internet to OpenAI, SynapseDB has a <strong>lightweight AI model built right inside the database</strong> that compiles English to query plans in 12 milliseconds with 100% privacy.
             </p>
+
+            {/* Direct Takeaway Points */}
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-sans text-slate-700">
+              <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-200">
+                <span className="font-bold text-purple-900 block mb-0.5">💬 Speaks Human</span>
+                <span>Ask naturally in English without needing to learn complex SQL.</span>
+              </div>
+              <div className="p-3 rounded-xl bg-emerald-50/60 border border-emerald-200">
+                <span className="font-bold text-emerald-900 block mb-0.5">🔒 $0 Cloud Bills</span>
+                <span>Runs 100% locally on your computer with zero external API tokens.</span>
+              </div>
+              <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-200">
+                <span className="font-bold text-blue-900 block mb-0.5">⚡ 12ms Instant</span>
+                <span>Translates intent to execution faster than you can blink.</span>
+              </div>
+            </div>
           </div>
 
           {/* Example Question Selector */}
@@ -1658,12 +1823,16 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
         <div className="max-w-7xl mx-auto space-y-8">
           
           <div>
-            <div className="text-xs font-mono text-blue-600 font-bold mb-1">04 / ENGINE INTERNALS</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              Real Rust Engine Source Code &amp; Memory Layout
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold mb-2">
+              <span>⚙️ Section 5</span>
+              <span>·</span>
+              <span>Engine Architecture &amp; Code</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight font-sans">
+              Rust Engine Source Code &amp; Memory Layout
             </h2>
             <p className="text-sm text-[#4B5563] mt-1 max-w-2xl font-sans">
-              For BTech students and systems engineers: inspect the actual production Rust structs powering SynapseDB.
+              For BTech students and systems engineers: inspect the actual production Rust structs and memory models powering SynapseDB.
             </p>
           </div>
 
@@ -1769,13 +1938,41 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
         <div className="max-w-7xl mx-auto space-y-8">
           
           <div>
-            <div className="text-xs font-mono text-blue-600 font-bold mb-1">05 / BENCHMARKS</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold mb-2">
+              <span>⚡ Section 6</span>
+              <span>·</span>
+              <span>Real-World Speed Comparison</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight font-sans">
               Speed Comparison: 1,000,000 Row Analytical Scan
             </h2>
             <p className="text-sm text-[#4B5563] mt-1 max-w-2xl font-sans">
-              All benchmarks measured on identical hardware calculating the average value across 1M records.
+              All engines measured on identical hardware calculating the average value across 1,000,000 records.
             </p>
+
+            {/* Direct Summary Points */}
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-sans">
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-slate-800">
+                <span className="text-[11px] font-bold text-emerald-800 block">⚡ SynapseDB</span>
+                <span className="text-lg font-extrabold text-emerald-700 block">4.2 µs</span>
+                <span className="text-[11px] text-slate-500">Instant blink (1x)</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800">
+                <span className="text-[11px] font-bold text-slate-700 block">DuckDB</span>
+                <span className="text-lg font-extrabold text-slate-700 block">120 µs</span>
+                <span className="text-[11px] text-slate-500">28x slower</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800">
+                <span className="text-[11px] font-bold text-slate-700 block">PostgreSQL</span>
+                <span className="text-lg font-extrabold text-slate-700 block">8.5 ms</span>
+                <span className="text-[11px] text-slate-500">2,023x slower</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800">
+                <span className="text-[11px] font-bold text-slate-700 block">MongoDB</span>
+                <span className="text-lg font-extrabold text-slate-700 block">24.0 ms</span>
+                <span className="text-[11px] text-slate-500">5,714x slower</span>
+              </div>
+            </div>
           </div>
 
           {/* Intuitive Visual Speed Comparison Bars */}
