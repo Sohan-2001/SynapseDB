@@ -69,27 +69,57 @@ export async function fetchSchema(table = "", baseUrl = getApiBaseUrl()): Promis
 }
 
 export async function executeQuery(query: string, baseUrl = getApiBaseUrl()): Promise<QueryResponse> {
+  const cleanQuery = query.trim();
+  if (cleanQuery.length > 4096) {
+    throw new Error("Query is too long (maximum 4096 characters allowed).");
+  }
+
   const res = await fetch(`${baseUrl}/query`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query: cleanQuery }),
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    if (res.status === 429) {
+      throw new Error(err.message || "Server rate limit reached. Please wait a few seconds.");
+    }
+    if (res.status === 413) {
+      throw new Error(err.message || "Payload too large. Exceeds 100 KB limit.");
+    }
+    throw new Error(err.message || err.error || `HTTP ${res.status}`);
   }
   return res.json();
 }
 
 export async function pushPayload(table: string, payload: string, baseUrl = getApiBaseUrl()) {
+  const cleanTable = table.trim();
+  if (!cleanTable || !/^[a-zA-Z0-9_-]{1,64}$/.test(cleanTable)) {
+    throw new Error("Invalid table name. Only letters, numbers, hyphens, and underscores allowed (max 64 chars).");
+  }
+
+  // Pre-validate 100 KB limit client-side before sending across network
+  const payloadBytes = new TextEncoder().encode(payload).length;
+  if (payloadBytes > 100 * 1024) {
+    throw new Error(`Payload size (${(payloadBytes / 1024).toFixed(1)} KB) exceeds the 100 KB security limit.`);
+  }
+
   const res = await fetch(`${baseUrl}/push`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ table, payload }),
+    body: JSON.stringify({ table: cleanTable, payload }),
   });
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
-    throw new Error(err.error || `HTTP ${res.status}`);
+    if (res.status === 429) {
+      throw new Error(err.message || "Rate limit exceeded. Please wait a moment.");
+    }
+    if (res.status === 413) {
+      throw new Error(err.message || "Payload too large. Exceeds 100 KB limit.");
+    }
+    throw new Error(err.message || err.error || `HTTP ${res.status}`);
   }
   return res.json();
 }
@@ -100,5 +130,9 @@ export async function flushBuffers(baseUrl = getApiBaseUrl()) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({}),
   });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error(err.message || err.error || `HTTP ${res.status}`);
+  }
   return res.json();
 }

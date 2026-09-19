@@ -851,17 +851,46 @@ export default function SynapsePlayground() {
                   value={ingestPayloadText}
                   onChange={(e) => setIngestPayloadText(e.target.value)}
                   rows={6}
-                  className="w-full bg-[#090d16] border border-[#1e2638] rounded-lg p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-blue-500 resize-y"
+                  className={`w-full bg-[#090d16] border rounded-lg p-3 text-xs text-slate-200 font-mono focus:outline-none resize-y ${
+                    new TextEncoder().encode(ingestPayloadText).length > 100 * 1024
+                      ? "border-red-500/80 focus:border-red-500"
+                      : "border-[#1e2638] focus:border-blue-500"
+                  }`}
                 />
+                <div className="flex items-center justify-between mt-1 px-1">
+                  <span
+                    className={`text-[11px] font-mono ${
+                      new TextEncoder().encode(ingestPayloadText).length > 100 * 1024
+                        ? "text-red-400 font-bold flex items-center gap-1"
+                        : "text-slate-500"
+                    }`}
+                  >
+                    {new TextEncoder().encode(ingestPayloadText).length > 100 * 1024 && (
+                      <AlertCircle className="w-3.5 h-3.5" />
+                    )}
+                    Payload Size: {(new TextEncoder().encode(ingestPayloadText).length / 1024).toFixed(1)} KB / 100 KB limit
+                  </span>
+                  <span className="text-[10px] text-slate-500">Rate Limited: 60 req/min</span>
+                </div>
               </div>
 
               <button
                 onClick={handlePush}
-                disabled={isPushing}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-blue-500/20 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                disabled={isPushing || new TextEncoder().encode(ingestPayloadText).length > 100 * 1024}
+                className={`w-full py-2.5 rounded-lg text-xs font-semibold shadow-lg transition flex items-center justify-center gap-2 ${
+                  new TextEncoder().encode(ingestPayloadText).length > 100 * 1024
+                    ? "bg-red-500/20 text-red-400 border border-red-500/40 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20 disabled:opacity-50"
+                }`}
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>{isPushing ? "Appending to WAL..." : "Push to SynapseDB (Single or Batch)"}</span>
+                <span>
+                  {new TextEncoder().encode(ingestPayloadText).length > 100 * 1024
+                    ? "Cannot Push: Exceeds 100 KB Limit"
+                    : isPushing
+                    ? "Appending to WAL..."
+                    : "Push to SynapseDB (Single or Batch)"}
+                </span>
               </button>
 
               {pushAck && (
