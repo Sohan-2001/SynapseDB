@@ -1,16 +1,15 @@
-﻿export const DEFAULT_API_URL = "https://synapsedb-api-fd3325cc9fd0.herokuapp.com";
-
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     const custom = localStorage.getItem("synapse_api_url");
     if (custom) return custom.replace(/\/$/, "");
   }
-  return process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL;
+  return (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 }
 
 export function setCustomApiUrl(url: string) {
   if (typeof window !== "undefined") {
-    if (url && url !== DEFAULT_API_URL) {
+    const envUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+    if (url && url !== envUrl) {
       localStorage.setItem("synapse_api_url", url);
     } else {
       localStorage.removeItem("synapse_api_url");

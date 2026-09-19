@@ -30,12 +30,11 @@ import {
   flushBuffers,
   QueryResponse,
   SchemaResponse,
-  DEFAULT_API_URL,
 } from "@/lib/api";
 
 export default function SynapsePlayground() {
   const [activeTab, setActiveTab] = useState<"query" | "browser" | "ingest" | "docs">("query");
-  const [apiUrl, setApiUrl] = useState(DEFAULT_API_URL);
+  const [apiUrl, setApiUrl] = useState("");
   const [showConfig, setShowConfig] = useState(false);
   const [connected, setConnected] = useState(false);
   const [pingLatency, setPingLatency] = useState<number | null>(null);
@@ -369,18 +368,19 @@ export default function SynapsePlayground() {
             </button>
             <button
               onClick={() => {
-                setApiUrl(DEFAULT_API_URL);
-                setCustomApiUrl(DEFAULT_API_URL);
-                checkHealth(DEFAULT_API_URL);
+                const envUrl = process.env.NEXT_PUBLIC_API_URL || "";
+                setApiUrl(envUrl);
+                setCustomApiUrl("");
+                checkHealth(envUrl);
                 setShowConfig(false);
               }}
               className="text-slate-400 hover:text-slate-200 underline"
             >
-              Reset
+              Reset to .env
             </button>
           </div>
           <span className="text-slate-500 text-[11px]">
-            Points by default to live Heroku dyno: <code>synapsedb-api.herokuapp.com</code>
+            Configured via <code>NEXT_PUBLIC_API_URL</code> environment variable
           </span>
         </div>
       )}
