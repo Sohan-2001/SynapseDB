@@ -9,18 +9,21 @@ module.exports = {
     extend: {
       colors: {
         synapse: {
-          bg: '#f8fafc',
+          bg: '#fafaf9',
           card: '#ffffff',
-          border: '#e2e8f0',
+          border: '#e5e7eb',
           accent: '#2563eb',
-          cyan: '#0891b2',
+          content: '#111827',
+          muted: '#6b7280',
+          dark: '#0b0f19',
+          darkborder: '#1e293b',
           emerald: '#059669',
           amber: '#d97706',
         }
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'Fira Code', 'Consolas', 'monospace'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
       }
     },
   },

@@ -309,253 +309,103 @@ export default function SynapsePlayground() {
     return Object.values(r).some((v) => String(v).toLowerCase().includes(s));
   });
 
+  if (currentView === "landing") {
+    return (
+      <div className="min-h-screen bg-[#FAFAF9] text-[#111827] flex flex-col font-sans">
+        <LandingPage
+          onLaunchStudio={(tab) => {
+            if (tab) setActiveTab(tab);
+            setCurrentView("studio");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          apiUrl={apiUrl}
+          connected={connected}
+          pingLatency={pingLatency}
+        />
+        {/* Toast Notifications */}
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
+          {toasts.map((t) => (
+            <div
+              key={t.id}
+              className={`toast-enter px-4 py-2.5 rounded border text-xs font-mono flex items-center gap-2 max-w-sm pointer-events-auto shadow-md ${
+                t.type === "success"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                  : t.type === "error"
+                  ? "bg-red-50 border-red-200 text-red-800"
+                  : "bg-blue-50 border-blue-200 text-blue-800"
+              }`}
+            >
+              <span>{t.type === "success" ? "✓" : t.type === "error" ? "✗" : "ℹ"}</span>
+              {t.message}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
-      {/* Top Navbar */}
-      <header className="border-b border-slate-200 bg-white/95 backdrop-blur px-4 sm:px-6 py-3 sticky top-0 z-50 shadow-xs">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          
-          {/* Brand Logo & View Switcher */}
-          <div className="flex items-center gap-3 sm:gap-4">
+    <div className="min-h-screen bg-[#FAFAF9] text-[#111827] flex flex-col font-sans">
+      {/* Studio Header */}
+      <header className="border-b border-[#E5E7EB] bg-white px-4 sm:px-6 py-2.5 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 font-mono text-xs">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => {
                 setCurrentView("landing");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="flex items-center gap-2 group text-left"
+              className="flex items-center gap-2 font-bold text-[#111827] hover:text-blue-600 transition"
             >
-              <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
-                <Zap className="w-5 h-5 text-white fill-current" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-lg tracking-tight text-slate-950">SynapseDB</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                  {currentView === "landing" ? "v0.9" : "Studio"}
-                </span>
-              </div>
+              <span className="text-blue-600">⚡</span>
+              <span>SynapseDB</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                Studio Console
+              </span>
             </button>
-
-            {/* Connection Status Pill */}
             <div
               onClick={() => setShowConfig(!showConfig)}
-              className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-xs cursor-pointer transition"
-              title="Click to configure Cloud Backend URL"
+              className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#FAFAF9] border border-[#E5E7EB] text-[#6B7280] cursor-pointer hover:border-slate-400 transition"
             >
               <div className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
-              <span className="text-slate-700 font-medium">{connected ? "Cloud Engine Online" : "Connecting..."}</span>
-              {pingLatency !== null && <span className="text-slate-400 text-[11px]">({pingLatency} ms)</span>}
+              <span>{connected ? "online" : "connecting"}</span>
+              {pingLatency !== null && <span className="text-slate-400">({pingLatency} ms)</span>}
               <Settings2 className="w-3.5 h-3.5 text-slate-400 hover:text-slate-700 ml-0.5" />
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-600">
-            {currentView === "landing" ? (
-              <>
-                <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                  className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
-                >
-                  Overview
-                </button>
-                <a
-                  href="#demo-sandbox"
-                  className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
-                >
-                  Live Sandbox
-                </a>
-                <button
-                  onClick={() => {
-                    setActiveTab("query");
-                    setCurrentView("studio");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
-                >
-                  Query Studio
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("browser");
-                    setCurrentView("studio");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
-                >
-                  Data Browser
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("ingest");
-                    setCurrentView("studio");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
-                >
-                  Ingestion Lab
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("docs");
-                    setCurrentView("studio");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
-                >
-                  Syntax Rules
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => {
-                  setCurrentView("landing");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-blue-600 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition font-semibold"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Return to Overview</span>
-              </button>
-            )}
-          </nav>
-
-          {/* Action CTAs */}
           <div className="flex items-center gap-2.5">
-            {currentView === "landing" ? (
-              <button
-                onClick={() => {
-                  setActiveTab("query");
-                  setCurrentView("studio");
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="min-h-[40px] px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md shadow-blue-500/20 transition flex items-center gap-1.5"
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" />
-                <span>Launch Studio</span>
-              </button>
-            ) : (
-              <button
-                onClick={seedSampleData}
-                disabled={isSeeding}
-                className="min-h-[40px] hidden sm:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold transition"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>{isSeeding ? "Seeding..." : "Seed Sample Data"}</span>
-              </button>
-            )}
-
-            <a
-              href="https://github.com/Sohan-2001/SynapseDB"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="min-h-[40px] px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 font-semibold text-xs transition flex items-center gap-1.5"
-            >
-              <span>GitHub</span>
-              <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-            </a>
-
-            {/* Mobile Menu Toggle Button */}
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden min-h-[40px] min-w-[40px] p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center justify-center"
-              aria-label="Toggle Navigation Menu"
+              onClick={seedSampleData}
+              disabled={isSeeding}
+              className="px-3 py-1.5 rounded border border-[#E5E7EB] bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isSeeding ? "Seeding..." : "Seed Sample Data"}
             </button>
-          </div>
-
-        </div>
-
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-3 pt-3 border-t border-slate-200 flex flex-col gap-2 pb-2">
-            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-slate-50 text-xs">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-500" : "bg-amber-500"}`} />
-                <span className="font-medium text-slate-700">{connected ? "Cloud Engine Ready" : "Connecting..."}</span>
-              </div>
-              {pingLatency !== null && <span className="font-mono text-slate-400">{pingLatency} ms</span>}
-            </div>
-
             <button
               onClick={() => {
                 setCurrentView("landing");
-                setMobileMenuOpen(false);
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800 min-h-[44px] flex items-center"
+              className="px-3 py-1.5 rounded bg-[#111827] hover:bg-slate-800 text-white font-semibold text-xs transition flex items-center gap-1.5"
             >
-              Overview & Blueprint
-            </button>
-            <button
-              onClick={() => {
-                setCurrentView("studio");
-                setActiveTab("query");
-                setMobileMenuOpen(false);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800 flex items-center justify-between min-h-[44px]"
-            >
-              <span>Query Studio (SQL / NL)</span>
-              <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-semibold">Studio</span>
-            </button>
-            <button
-              onClick={() => {
-                setCurrentView("studio");
-                setActiveTab("browser");
-                setMobileMenuOpen(false);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800 min-h-[44px] flex items-center"
-            >
-              Data Browser (Tables & CSV)
-            </button>
-            <button
-              onClick={() => {
-                setCurrentView("studio");
-                setActiveTab("ingest");
-                setMobileMenuOpen(false);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800 min-h-[44px] flex items-center"
-            >
-              Ingestion Lab (JSON & Stress)
-            </button>
-            <button
-              onClick={() => {
-                setCurrentView("studio");
-                setActiveTab("docs");
-                setMobileMenuOpen(false);
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800 min-h-[44px] flex items-center"
-            >
-              Syntax Rules & Cheatsheet
-            </button>
-            <button
-              onClick={() => {
-                seedSampleData();
-                setMobileMenuOpen(false);
-              }}
-              className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 flex items-center gap-2 min-h-[44px]"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Seed Sample Data</span>
+              <ArrowLeft className="w-3 h-3" />
+              <span>[ Return to Overview ]</span>
             </button>
           </div>
-        )}
+        </div>
       </header>
 
       {/* Endpoint Config Dropdown Modal */}
       {showConfig && (
-        <div className="bg-gray-50 border-b border-gray-200 px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs">
+        <div className="bg-white border-b border-[#E5E7EB] px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
           <div className="flex items-center gap-3 flex-1 max-w-xl">
-            <span className="text-gray-500 font-medium whitespace-nowrap">Cloud Backend URL:</span>
+            <span className="text-gray-500 whitespace-nowrap">Cloud Backend URL:</span>
             <input
               type="text"
               value={apiUrl}
               onChange={(e) => setApiUrl(e.target.value)}
-              className="flex-1 bg-gray-50 border border-gray-200 rounded px-2.5 py-1 text-gray-800 font-mono text-xs focus:outline-none focus:border-blue-500 min-h-[44px]"
+              className="flex-1 bg-white border border-[#D1D5DB] rounded px-2.5 py-1 text-gray-800 font-mono text-xs focus:outline-none focus:border-blue-500"
             />
             <button
               onClick={() => {
@@ -563,7 +413,7 @@ export default function SynapsePlayground() {
                 checkHealth(apiUrl);
                 setShowConfig(false);
               }}
-              className="min-h-[44px] px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium"
+              className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium"
             >
               Apply
             </button>
@@ -575,31 +425,15 @@ export default function SynapsePlayground() {
                 checkHealth(envUrl);
                 setShowConfig(false);
               }}
-              className="min-h-[44px] text-gray-500 hover:text-gray-800 underline"
+              className="text-gray-500 hover:text-gray-800 underline"
             >
-              Reset to .env
+              Reset
             </button>
           </div>
-          <span className="text-gray-400 text-[11px]">
-            Configured via <code>NEXT_PUBLIC_API_URL</code> environment variable
-          </span>
         </div>
       )}
 
-      {/* View Switcher: Landing Page vs Studio */}
-      {currentView === "landing" ? (
-        <LandingPage
-          onLaunchStudio={(tab) => {
-            if (tab) setActiveTab(tab);
-            setCurrentView("studio");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-          apiUrl={apiUrl}
-          connected={connected}
-          pingLatency={pingLatency}
-        />
-      ) : (
-        <div className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6 gap-6">
+      <div className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6 gap-6">
         {/* Navigation Tabs */}
         <div className="flex border-b border-gray-200 gap-1 overflow-x-auto">
           <button
@@ -1243,7 +1077,6 @@ Count of orders where amount >= 100`}
         )}
 
         </div>
-      )}
 
       {/* Toast Notifications */}
         <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
