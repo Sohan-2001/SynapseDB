@@ -13,6 +13,7 @@
   <!-- Top Navigation Header -->
   <header class="app-header">
     <div class="header-left">
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
       <div class="logo-group">
         <div class="logo-icon">⚡</div>
         <div class="logo-text">
@@ -41,6 +42,7 @@
   </header>
 
   <div class="app-layout">
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
       <nav class="nav-menu">
@@ -505,5 +507,6 @@
   </div>
 
   <script src="renderer.js"></script>
+  <div class="toast-container" id="toastContainer"></div>
 </body>
 </html>

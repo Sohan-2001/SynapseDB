@@ -338,6 +338,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnExportJson.addEventListener('click', () => {
     if (!latestQueryResult) return;
     navigator.clipboard.writeText(JSON.stringify(latestQueryResult, null, 2));
+    showToast('JSON copied to clipboard!', 'success');
     btnExportJson.textContent = 'Copied!';
     setTimeout(() => { btnExportJson.textContent = 'Copy JSON'; }, 1500);
   });
@@ -650,6 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCopyBrowserJson.addEventListener('click', () => {
     if (!browserRows.length) return;
     navigator.clipboard.writeText(browserJsonPre.textContent);
+    showToast('JSON copied to clipboard!', 'success');
     btnCopyBrowserJson.innerHTML = '<span>✓</span> Copied!';
     setTimeout(() => { btnCopyBrowserJson.innerHTML = '<span>📋</span> Copy JSON'; }, 1500);
   });
@@ -670,6 +672,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.download = `${browserActiveTable || 'table'}_export.csv`;
     a.click();
     URL.revokeObjectURL(url);
+    showToast('CSV exported successfully!', 'success');
   });
 
   async function loadDataBrowserTables() {
@@ -829,5 +832,46 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+  // Mobile sidebar toggle
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.querySelector('.sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('open');
+    });
+  }
+
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('open');
+    });
+  }
+
+  // Close sidebar on nav item click (mobile)
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('open');
+      }
+    });
+  });
+
+  // Toast notification system
+  function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span> ${message}`;
+    container.appendChild(toast);
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 3000);
   }
 });

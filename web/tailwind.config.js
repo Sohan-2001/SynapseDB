@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -10,13 +9,13 @@ module.exports = {
     extend: {
       colors: {
         synapse: {
-          dark: '#0a0d14',
-          card: '#0f1420',
-          border: '#1e2638',
-          accent: '#3b82f6',
-          cyan: '#06b6d4',
-          emerald: '#10b981',
-          amber: '#f59e0b',
+          bg: '#f8fafc',
+          card: '#ffffff',
+          border: '#e2e8f0',
+          accent: '#2563eb',
+          cyan: '#0891b2',
+          emerald: '#059669',
+          amber: '#d97706',
         }
       },
       fontFamily: {
