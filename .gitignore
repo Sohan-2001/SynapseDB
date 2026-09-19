@@ -38,3 +38,4 @@ scratch/
 .DS_Store
 Thumbs.db
 [Dd]esktop.ini
+*.tsbuildinfo

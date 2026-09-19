@@ -29,6 +29,7 @@ export interface QueryResponse {
     execution_time_us: number;
   };
   error?: string;
+  plan?: string;
   raw?: string;
 }
 
@@ -38,6 +39,7 @@ export interface SchemaResponse {
   row_count?: number;
   table?: string;
   error?: string;
+  plan?: string;
 }
 
 export interface HealthResponse {
@@ -45,6 +47,7 @@ export interface HealthResponse {
   engine?: string;
   ping?: string;
   error?: string;
+  plan?: string;
 }
 
 export async function pingHealth(baseUrl = getApiBaseUrl()): Promise<{ ok: boolean; data?: HealthResponse; latencyMs: number }> {
