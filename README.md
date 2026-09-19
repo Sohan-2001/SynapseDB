@@ -1,4 +1,4 @@
-﻿# ⚡ SynapseDB
+# ⚡ SynapseDB
 
 > **A sub-millisecond, zero-DDL hybrid database engine built in Rust with local SLM query compilation and vectorized columnar analytics.**
 

@@ -1,4 +1,4 @@
-﻿# SynapseDB: Ingestion & Query Syntax Rules
+# SynapseDB: Ingestion & Query Syntax Rules
 
 > **Architecture Context**: SynapseDB uses an ultra-fast, deterministic **Small Language Model (SLM)** and zero-overhead columnar parser rather than a multi-billion-parameter cloud LLM. 
 > 
