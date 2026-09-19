@@ -37,6 +37,40 @@ body {
   font-feature-settings: 'zero' 1, 'tnum' 1;
 }
 
+/* 3D Isometric & Perspective Helpers */
+.perspective-800 {
+  perspective: 800px;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.isometric-card {
+  transform: rotateX(20deg) rotateZ(-10deg) skewX(-10deg);
+  box-shadow: -8px 12px 24px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.isometric-column {
+  transform: rotateX(15deg) rotateZ(-5deg);
+  box-shadow: -4px 8px 16px rgba(37, 99, 235, 0.12);
+}
+
+/* Cylinder 3D styling */
+.cylinder-top {
+  border-radius: 50% / 20%;
+}
+
+/* Pulse animation for data flow */
+@keyframes flowPulse {
+  0%, 100% { transform: translateY(0); opacity: 0.9; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+
+.animate-flow {
+  animation: flowPulse 2.5s ease-in-out infinite;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 5px;

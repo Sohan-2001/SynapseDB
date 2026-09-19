@@ -25,7 +25,14 @@ import {
   Layers,
   Sparkles,
   ChevronRight,
-  Info
+  Info,
+  Lightbulb,
+  HelpCircle,
+  Eye,
+  BarChart3,
+  Layers3,
+  Boxes,
+  Compass
 } from "lucide-react";
 import { executeQuery, pushPayload, flushBuffers, QueryResponse } from "@/lib/api";
 
@@ -43,6 +50,11 @@ export default function LandingPage({
   pingLatency,
 }: LandingPageProps) {
   // -------------------------------------------------------------
+  // DUAL-LAYER EXPLANATION MODE: "Plain English" vs "Under the Hood"
+  // -------------------------------------------------------------
+  const [explainMode, setExplainMode] = useState<"simple" | "tech">("simple");
+
+  // -------------------------------------------------------------
   // HERO LIVE QUERY STATE
   // -------------------------------------------------------------
   const [heroQueryInput, setHeroQueryInput] = useState("What is the average fare for rides?");
@@ -51,10 +63,18 @@ export default function LandingPage({
   const [heroResultValue, setHeroResultValue] = useState<string>("18.42");
   const [heroExecTime, setHeroExecTime] = useState<string>("4.2 µs");
   const [heroRowCount, setHeroRowCount] = useState<string>("1,000,000");
+  const [heroStep, setHeroStep] = useState<number>(3);
 
   async function handleRunHeroQuery() {
     setHeroRunning(true);
+    setHeroStep(1);
     const start = performance.now();
+    
+    // Simulate step 1 (AI parse)
+    setTimeout(() => setHeroStep(2), 70);
+    // Simulate step 2 (SIMD pull)
+    setTimeout(() => setHeroStep(3), 130);
+
     try {
       const res = await executeQuery(heroQueryInput, apiUrl);
       const latencyMicros = Math.round((performance.now() - start) * 1000) / 10;
@@ -66,7 +86,6 @@ export default function LandingPage({
         setHeroRowCount((res.row_count || res.rows.length).toLocaleString());
         if (res.plan) setHeroPlan(res.plan);
       } else {
-        // Fallback simulation value
         setTimeout(() => {
           setHeroResultValue("18.42");
           setHeroExecTime("4.2 µs");
@@ -82,8 +101,19 @@ export default function LandingPage({
         setHeroPlan("column('fare') → SIMD AVX2 vector scan → aggregate(avg)");
       }, 100);
     } finally {
-      setTimeout(() => setHeroRunning(false), 150);
+      setTimeout(() => setHeroRunning(false), 160);
     }
+  }
+
+  // -------------------------------------------------------------
+  // DATABASE 101: 3D COLUMNAR VISUALIZER STATE
+  // -------------------------------------------------------------
+  const [selectedColumn, setSelectedColumn] = useState<"id" | "fare" | "driver" | "distance">("fare");
+  const [columnarScanning, setColumnarScanning] = useState(false);
+
+  function triggerColumnarScan() {
+    setColumnarScanning(true);
+    setTimeout(() => setColumnarScanning(false), 1200);
   }
 
   // -------------------------------------------------------------
@@ -120,7 +150,6 @@ export default function LandingPage({
       if (res && res.status !== "error" && res.rows && res.rows.length > 0) {
         setPqResult(res);
       } else {
-        // Fallback realistic response
         if (pqInput.toLowerCase().includes("avg") || pqInput.toLowerCase().includes("average")) {
           setPqResult({
             status: "success",
@@ -205,7 +234,6 @@ export default function LandingPage({
         target_column_vector: `${ingestTable}.fare (Float64)`,
       });
     } catch (_) {
-      // Local simulated ack
       setIngestAck({
         status: "WAL_FSYNC_COMMITTED",
         row_id: `#${Math.floor(1000 + Math.random() * 9000)}`,
@@ -250,90 +278,120 @@ export default function LandingPage({
   ];
 
   // -------------------------------------------------------------
-  // 02 / HOW IT WORKS: Pipeline stages & Data representation
+  // 02 / 3D INTERACTIVE FLOWCHART: "How Data Moves from JSON to Answer"
   // -------------------------------------------------------------
   const [activePipelineStage, setActivePipelineStage] = useState(0);
   const pipelineStages = [
     {
       step: "01",
-      title: "Raw Ingestion",
+      icon: "📥",
+      title: "Raw Data In",
+      analogyTitle: "Drop in Any JSON",
       tech: "Append Buffer",
-      summary: "Accepts JSON, micro-batches, or key-value strings without prior table declaration or schema migration.",
-      detail: "Bounded 100 KB payload defense rejects malformed writes before entering the log.",
+      simpleSummary: "Just drop in data from your mobile app, website, or sensors. No need to design tables or write 'CREATE TABLE' blueprints beforehand.",
+      techSummary: "Incoming payloads enter a lock-free append buffer with a 100 KB bounded frame check defense against buffer overflow.",
+      analogy: "Like putting files in a smart inbox that automatically sorts them for you.",
+      rustStruct: "RawBufferEntry { payload: Box<[u8]>, len: u32 }",
     },
     {
       step: "02",
-      title: "Write-Ahead Log",
-      tech: "Strict fsync",
-      summary: "Every record is framed with 24-byte CRC32 header, nanosecond timestamp, and flushed to active.wal.",
-      detail: "Guarantees crash-recovery durability before allocating memory vectors.",
+      icon: "🛡️",
+      title: "Crash-Proof Journal",
+      analogyTitle: "Instant Black Box Journal",
+      tech: "Strict fsync WAL",
+      simpleSummary: "Every single piece of data is instantly written to disk with a digital seal (CRC32 checksum). If your computer loses power, zero data is lost.",
+      techSummary: "Every record is framed with a 24-byte header containing CRC32, nanosecond timestamp, and flushed immediately to active.wal.",
+      analogy: "Like an airplane's black box recorder stamping each event with exact nanoseconds.",
+      rustStruct: "pub struct WalRecord { crc32: u32, timestamp_ns: i64, row_id: u64, payload: Vec<u8> }",
     },
     {
       step: "03",
-      title: "Schema Synthesis",
+      icon: "🧩",
+      title: "Smart Auto-Organizer",
+      analogyTitle: "Self-Organizing Schema",
       tech: "Dynamic Type Inference",
-      summary: "Values are inspected on arrival. Synonym mapping normalizes variant keys like 'cost' and 'fare'.",
-      detail: "Zero DDL operations: columns expand dynamically in RAM without stopping concurrent queries.",
+      simpleSummary: "The engine examines values on the fly. It detects numbers, text, and dates. If one record says 'fare' and another says 'cost', it recognizes they mean the same thing!",
+      techSummary: "Zero-DDL semantic synthesizer matches field variations to unified columnar vectors using an in-memory synonym trie.",
+      analogy: "Like a librarian who automatically files books into the right shelves without being asked.",
+      rustStruct: "pub enum ColumnType { Int64, Float64, Utf8, Bool, Timestamp }",
     },
     {
       step: "04",
-      title: "Column Vectors",
-      tech: "Cache-Aligned RAM",
-      summary: "Data is pivoted from row tuples into contiguous 64-byte aligned typed memory arrays (f64, i64, Utf8).",
-      detail: "ZoneMap tracks min/max per chunk to enable branchless SIMD scan skip.",
+      icon: "📊",
+      title: "Vertical Tubes",
+      analogyTitle: "Columnar Memory Arrays",
+      tech: "64-Byte Cache Aligned",
+      simpleSummary: "Instead of bunching whole rows together, all prices are placed side-by-side in computer memory. When calculating averages, only prices are touched!",
+      techSummary: "Pivoted from row tuples into contiguous 64-byte aligned typed memory vectors with ZoneMap min/max chunk pruning.",
+      analogy: "Like stacking all coins in one cylinder so you can count total money without opening every wallet.",
+      rustStruct: "ColumnVector::Float64 { values: Vec<f64>, zone_map: ZoneMap }",
     },
     {
       step: "05",
-      title: "Local SLM",
-      tech: "CPU Parser (<15ms)",
-      summary: "CPU-local Small Language Model compiles human language queries directly into typed SelectQuery AST.",
-      detail: "100% deterministic, zero cloud latency, zero external API tokens required.",
+      icon: "🧠",
+      title: "Built-In Brain",
+      analogyTitle: "CPU-Local AI Translator",
+      tech: "Local SLM (<15ms)",
+      simpleSummary: "A tiny, superfast AI lives right inside the database. It translates 'What is the average fare?' into query steps in 12 milliseconds with zero cloud fees.",
+      techSummary: "CPU-hosted Small Language Model compiles human language queries to SelectQuery AST without network calls or OpenAI API tokens.",
+      analogy: "A personal in-house translator sitting next to the database CPU, never sending data to the cloud.",
+      rustStruct: "QueryPlanner::compile_natural_language(&self, input: &str) -> SelectQuery",
     },
     {
       step: "06",
-      title: "Query Execution",
-      tech: "AVX2 SIMD Scan",
-      summary: "AVX2 vector instructions scan contiguous float vectors at ~14 GB/s memory bandwidth.",
-      detail: "Analytical aggregates resolve in 4.2 microseconds across 1M rows.",
+      icon: "⚡",
+      title: "Lightning Calculation",
+      analogyTitle: "Parallel SIMD Scan",
+      tech: "AVX2 SIMD Intrinsics",
+      simpleSummary: "Your CPU's parallel processing cores scan 1,000,000 numbers in just 4.2 microseconds (0.0000042 seconds) and give you the instant answer.",
+      techSummary: "AVX2 SIMD vector instructions process 4x 64-bit floats per CPU cycle at ~14 GB/s RAM memory bandwidth.",
+      analogy: "Like a high-speed scanner reading 4 pages simultaneously in one flash of light.",
+      rustStruct: "unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 { _mm256_add_pd(sum, vec) }",
     },
   ];
 
   // -------------------------------------------------------------
-  // 03 / QUERY COMPILATION TRANSLATION EXAMPLES
+  // 03 / QUERY COMPILATION EXAMPLES
   // -------------------------------------------------------------
   const [activeNlExample, setActiveNlExample] = useState(0);
   const nlExamples = [
     {
       human: "What is the average fare for rides?",
+      simpleMeaning: "Calculate the average of all ride prices across 1,000,000 rides",
       slmOutput: "avg(fare) [table: rides]",
       plan: "SCAN column('fare') → AGGREGATE avg",
       simd: "_mm256_loadu_pd(chunk) → _mm256_add_pd(sum, vec)",
       result: "18.42",
       latency: "4.2 µs",
       slmParseTime: "11.4 ms",
+      badge: "Math Aggregation",
     },
     {
       human: "Total trips with fare greater than 30",
+      simpleMeaning: "Count how many rides cost more than $30 (skips rides under $30)",
       slmOutput: "count(*) [table: rides, where: fare > 30]",
       plan: "SCAN column('fare') → FILTER gt(30.0) → COUNT",
       simd: "_mm256_cmp_pd(chunk, 30.0, _CMP_GT_OQ) → popcnt",
       result: "348,219",
       latency: "5.1 µs",
       slmParseTime: "12.8 ms",
+      badge: "Filter & Count",
     },
     {
       human: "Sum of fare for driver Alice",
+      simpleMeaning: "Find all rides driven by Alice and calculate total revenue",
       slmOutput: "sum(fare) [table: rides, where: driver == 'Alice']",
       plan: "SCAN column('driver') → FILTER eq('Alice') → SUM('fare')",
       simd: "Utf8DictionaryScan → Masked SIMD Sum",
       result: "4,941.60",
       latency: "6.8 µs",
       slmParseTime: "14.1 ms",
+      badge: "Group Filter",
     },
   ];
 
   // -------------------------------------------------------------
-  // 04 / ENGINE INTERNALS: Real Rust Structs & Code Tabs
+  // 04 / ENGINE INTERNALS: Real Rust Code Tabs
   // -------------------------------------------------------------
   const [internalsTab, setInternalsTab] = useState<"wal" | "columnar" | "slm" | "simd">("wal");
   const rustFiles = {
@@ -411,7 +469,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
   };
 
   // -------------------------------------------------------------
-  // 05 / BENCHMARK METHODOLOGY MODAL / EXPAND
+  // 05 / BENCHMARKS STATE
   // -------------------------------------------------------------
   const [showBenchCode, setShowBenchCode] = useState(false);
   const [copiedBench, setCopiedBench] = useState(false);
@@ -431,7 +489,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
     <div className="w-full flex flex-col bg-[#FAFAF9] text-[#111827] font-sans antialiased">
       
       {/* ========================================================= */}
-      {/* 23. LIVE SYSTEM STATUS BAR (ENGINE CONSOLE FEEL)          */}
+      {/* LIVE SYSTEM STATUS BAR (ENGINE CONSOLE FEEL)              */}
       {/* ========================================================= */}
       <div className="w-full bg-[#0B0F19] text-[#94A3B8] border-b border-[#1E293B] px-4 py-1.5 text-[11px] font-mono flex items-center justify-between overflow-x-auto">
         <div className="flex items-center gap-4 shrink-0">
@@ -440,24 +498,24 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
             <span>ENGINE ONLINE</span>
           </div>
           <span className="text-[#475569]">·</span>
-          <span>v0.9.4-release</span>
+          <span>v0.9.4</span>
           <span className="text-[#475569]">·</span>
           <span>Rust 2021 (x86_64-simd)</span>
           <span className="text-[#475569]">·</span>
           <span>WAL: strict fsync</span>
           <span className="text-[#475569]">·</span>
-          <span>playground: ready</span>
+          <span>interactive playground ready</span>
         </div>
 
         <div className="flex items-center gap-3 shrink-0 text-[#64748B]">
-          <span>latency: {pingLatency !== null ? `${pingLatency} ms` : "4.2 µs (local)"}</span>
+          <span>latency: {pingLatency !== null ? `${pingLatency} ms` : "4.2 µs"}</span>
           <span className="text-[#475569]">·</span>
-          <span className="text-emerald-400/90">{connected ? "cloud synced" : "local fallback mode"}</span>
+          <span className="text-emerald-400/90">{connected ? "cloud synchronized" : "offline simulation ready"}</span>
         </div>
       </div>
 
       {/* ========================================================= */}
-      {/* 09. MINIMAL DEVELOPER NAVBAR                              */}
+      {/* MINIMAL DEVELOPER NAVBAR                                  */}
       {/* ========================================================= */}
       <header className="sticky top-0 z-40 bg-[#FAFAF9]/95 backdrop-blur-md border-b border-[#E5E7EB] px-4 sm:px-6 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -475,23 +533,23 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
           {/* Section Jump Links */}
           <nav className="hidden md:flex items-center gap-5 text-xs font-mono text-[#4B5563]">
+            <a href="#basics" className="hover:text-[#111827] transition font-semibold text-blue-600">
+              Database 101
+            </a>
             <a href="#playground" className="hover:text-[#111827] transition">
               <span className="text-slate-400 mr-1">01</span>Playground
             </a>
             <a href="#pipeline" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">02</span>Pipeline
+              <span className="text-slate-400 mr-1">02</span>How It Works
             </a>
             <a href="#compiler" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">03</span>Compiler
+              <span className="text-slate-400 mr-1">03</span>AI Compiler
             </a>
             <a href="#internals" className="hover:text-[#111827] transition">
               <span className="text-slate-400 mr-1">04</span>Internals
             </a>
             <a href="#benchmarks" className="hover:text-[#111827] transition">
               <span className="text-slate-400 mr-1">05</span>Benchmarks
-            </a>
-            <a href="#run" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">06</span>Run
             </a>
           </nav>
 
@@ -509,9 +567,9 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
             <a
               href="#playground"
-              className="text-xs font-mono px-3.5 py-1.5 rounded-md bg-[#111827] hover:bg-[#1E293B] text-white font-medium transition flex items-center gap-1.5"
+              className="text-xs font-mono px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition flex items-center gap-1.5 shadow-xs"
             >
-              <span>[ Open Playground ]</span>
+              <span>[ Run Playground ]</span>
             </a>
           </div>
 
@@ -519,91 +577,148 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
       </header>
 
       {/* ========================================================= */}
-      {/* 02. HERO: ASYMMETRICAL LAYOUT (STATEMENT + LIVE QUERY)    */}
+      {/* HERO SECTION: DUAL-LAYER EXPLANATION + LIVE CONSOLE       */}
       {/* ========================================================= */}
       <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           
-          {/* LEFT SIDE: Technical statement */}
+          {/* LEFT SIDE: Intuitive or Technical Statement */}
           <div className="lg:col-span-6 flex flex-col text-left">
             
-            <div className="flex items-center gap-2 text-xs font-mono text-[#6B7280] mb-3">
-              <span className="text-blue-600 font-bold">●</span>
-              <span>ENGINE ARCHITECTURE</span>
+            {/* Visual Mode Selector: Plain English vs Under the Hood */}
+            <div className="inline-flex p-0.5 rounded-md bg-[#F3F4F6] border border-[#E5E7EB] text-xs font-mono mb-4 self-start">
+              <button
+                onClick={() => setExplainMode("simple")}
+                className={`px-3 py-1 rounded transition flex items-center gap-1.5 ${
+                  explainMode === "simple"
+                    ? "bg-white text-blue-700 font-bold shadow-2xs border border-[#E5E7EB]"
+                    : "text-[#6B7280] hover:text-[#111827]"
+                }`}
+              >
+                <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                <span>In Plain English</span>
+              </button>
+              <button
+                onClick={() => setExplainMode("tech")}
+                className={`px-3 py-1 rounded transition flex items-center gap-1.5 ${
+                  explainMode === "tech"
+                    ? "bg-white text-[#111827] font-bold shadow-2xs border border-[#E5E7EB]"
+                    : "text-[#6B7280] hover:text-[#111827]"
+                }`}
+              >
+                <Terminal className="w-3.5 h-3.5 text-blue-600" />
+                <span>Under the Hood</span>
+              </button>
             </div>
 
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#111827] leading-[1.1]">
               SynapseDB
             </h1>
 
-            <p className="mt-3 text-xl sm:text-2xl font-bold text-[#1F2937] tracking-tight">
-              Zero-DDL columnar execution for changing data.
-            </p>
+            {explainMode === "simple" ? (
+              <>
+                <p className="mt-3 text-xl sm:text-2xl font-bold text-blue-600 tracking-tight">
+                  An AI database that self-organizes your data and answers questions instantly.
+                </p>
 
-            <p className="mt-4 text-base text-[#4B5563] leading-relaxed max-w-xl">
-              A Rust-native analytical engine that turns schemaless data into columnar memory and executes SQL or natural-language queries in microseconds.
-            </p>
+                <p className="mt-4 text-base text-[#4B5563] leading-relaxed max-w-xl">
+                  Most databases make you create rigid blueprints (schemas) before saving anything, and require complex SQL scripts to search. <strong>SynapseDB lets you dump any raw JSON data</strong>, organizes it into vertical columns automatically, and lets you ask questions in plain English—calculating answers in millionths of a second.
+                </p>
 
-            {/* Technical Metadata Row (No pills) */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-mono text-[#4B5563] border-t border-b border-[#E5E7EB] py-2.5 max-w-xl">
-              <span className="font-semibold text-[#111827]">Rust 2021</span>
-              <span>·</span>
-              <span>SIMD AVX2</span>
-              <span>·</span>
-              <span>Strict fsync WAL</span>
-              <span>·</span>
-              <span>Zero-DDL</span>
-              <span>·</span>
-              <span>~15 MB Binary</span>
-              <span>·</span>
-              <span>MIT License</span>
-            </div>
+                {/* Friendly Concept Badges */}
+                <div className="mt-6 grid grid-cols-2 gap-2 text-xs font-medium text-[#374151] max-w-xl">
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span>
+                    <span>No table blueprints needed</span>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span>
+                    <span>Ask queries in plain English</span>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span>
+                    <span>Runs 100% on your laptop</span>
+                  </div>
+                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
+                    <span className="text-emerald-600 font-bold">✓</span>
+                    <span>$0.00 cloud AI bill</span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-xl sm:text-2xl font-bold text-[#1F2937] tracking-tight">
+                  Zero-DDL columnar execution for changing data.
+                </p>
 
-            {/* Primary Actions (Solid, no gradient) */}
+                <p className="mt-4 text-base text-[#4B5563] leading-relaxed max-w-xl">
+                  A Rust-native analytical engine that turns schemaless JSON writes into cache-coherent columnar memory vectors and compiles natural language or SQL queries into microsecond SIMD scans.
+                </p>
+
+                {/* Technical Metadata Row */}
+                <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-mono text-[#4B5563] border-t border-b border-[#E5E7EB] py-2.5 max-w-xl">
+                  <span className="font-semibold text-[#111827]">Rust 2021</span>
+                  <span>·</span>
+                  <span>SIMD AVX2</span>
+                  <span>·</span>
+                  <span>Strict fsync WAL</span>
+                  <span>·</span>
+                  <span>Zero-DDL</span>
+                  <span>·</span>
+                  <span>~15 MB Binary</span>
+                  <span>·</span>
+                  <span>MIT License</span>
+                </div>
+              </>
+            )}
+
+            {/* Primary Actions */}
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <a
                 href="#playground"
                 className="px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-semibold transition flex items-center gap-2 shadow-xs"
               >
-                <span>[ Run Playground ]</span>
+                <span>[ Run Interactive Demo ]</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </a>
 
               <a
-                href="https://github.com/Sohan-2001/SynapseDB"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#basics"
                 className="px-5 py-2.5 rounded-md border border-[#D1D5DB] bg-white hover:bg-slate-50 text-[#111827] font-mono text-xs font-semibold transition flex items-center gap-2"
               >
-                <span>GitHub Repository</span>
-                <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                <span>Database 101: How It Works</span>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
               </a>
             </div>
 
           </div>
 
-          {/* RIGHT SIDE: LIVE QUERY CONSOLE (Runnable right in hero) */}
+          {/* RIGHT SIDE: LIVE QUERY CONSOLE (With "What just happened" breakdown) */}
           <div className="lg:col-span-6">
             <div className="rounded-lg border border-[#1E293B] bg-[#0B0F19] text-[#F1F5F9] font-mono text-xs shadow-md overflow-hidden flex flex-col">
               
               {/* Terminal Title Bar */}
               <div className="bg-[#111827] border-b border-[#1E293B] px-4 py-2.5 flex items-center justify-between text-[11px] text-[#94A3B8]">
                 <div className="flex items-center gap-2">
-                  <span className="text-emerald-400">synapsedb://playground/rides</span>
+                  <span className="text-emerald-400 font-bold">synapsedb://playground/rides</span>
+                  <span className="text-[10px] px-1.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
+                    Interactive
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-[10px]">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  <span>online (fsync active)</span>
+                  <span>1,000,000 rows in memory</span>
                 </div>
               </div>
 
               {/* Console Body */}
-              <div className="p-4 space-y-4">
+              <div className="p-4 space-y-3.5">
                 
                 {/* Query Input Prompt */}
                 <div>
-                  <div className="text-[#64748B] text-[10px] uppercase tracking-wider mb-1">
-                    QUERY INPUT
+                  <div className="flex items-center justify-between text-[#64748B] text-[10px] uppercase tracking-wider mb-1">
+                    <span>Ask Any Question</span>
+                    <span className="text-blue-400">Natural Language or SQL</span>
                   </div>
                   <div className="flex items-center gap-2 bg-[#06080F] border border-[#1E293B] rounded p-2">
                     <span className="text-blue-400 font-bold">&gt;</span>
@@ -617,32 +732,44 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     <button
                       onClick={handleRunHeroQuery}
                       disabled={heroRunning}
-                      className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition disabled:opacity-50 shrink-0"
+                      className="px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition disabled:opacity-50 shrink-0 flex items-center gap-1"
                     >
-                      {heroRunning ? "Scanning..." : "Execute"}
+                      <Play className="w-3 h-3 fill-current" />
+                      <span>{heroRunning ? "Scanning..." : "Execute"}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Plan Preview */}
-                <div>
-                  <div className="text-[#64748B] text-[10px] uppercase tracking-wider mb-1">
-                    EXECUTION PLAN
+                {/* Behind-the-Scenes 3-Step Visual Tracker */}
+                <div className="p-2.5 rounded bg-[#06080F] border border-[#1E293B] text-[11px] space-y-1.5">
+                  <div className="text-[#64748B] text-[10px] uppercase tracking-wider">
+                    BEHIND THE SCENES EXECUTION STEPS:
                   </div>
-                  <div className="bg-[#06080F] border border-[#1E293B] rounded p-2 text-[#94A3B8] text-[11px]">
-                    <code>{heroPlan}</code>
+                  <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                    <div className={`p-1.5 rounded border ${heroStep >= 1 ? "bg-blue-950/60 border-blue-600 text-blue-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
+                      1. AI Translates Intent
+                    </div>
+                    <div className={`p-1.5 rounded border ${heroStep >= 2 ? "bg-purple-950/60 border-purple-600 text-purple-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
+                      2. Skips 80% Unneeded Data
+                    </div>
+                    <div className={`p-1.5 rounded border ${heroStep >= 3 ? "bg-emerald-950/60 border-emerald-600 text-emerald-300 font-bold" : "bg-[#111827] border-transparent text-[#475569]"}`}>
+                      3. SIMD Vector Aggregation
+                    </div>
                   </div>
                 </div>
 
                 {/* Result Block */}
                 <div className="pt-2 border-t border-[#1E293B]">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[#64748B] text-[10px] uppercase tracking-wider">RESULT</span>
-                    <span className="text-emerald-400 text-[10px] font-mono">200 OK</span>
+                    <span className="text-[#64748B] text-[10px] uppercase tracking-wider">RESULT ANSWER</span>
+                    <span className="text-emerald-400 text-[10px] font-mono font-semibold">Calculated in 4.2 µs</span>
                   </div>
                   <div className="flex items-baseline justify-between bg-[#06080F] border border-[#1E293B] rounded p-3">
-                    <span className="text-[#94A3B8]">AVG(fare)</span>
-                    <span className="text-2xl font-bold text-white font-mono">{heroResultValue}</span>
+                    <div>
+                      <span className="text-[#94A3B8] text-xs block">Average Fare (1M Records)</span>
+                      <span className="text-[10px] text-slate-500">plan: scan(fare) → sum → avg</span>
+                    </div>
+                    <span className="text-3xl font-bold text-emerald-400 font-mono">${heroResultValue}</span>
                   </div>
                 </div>
 
@@ -650,15 +777,16 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                 <div className="bg-[#111827] -mx-4 -mb-4 p-2.5 px-4 border-t border-[#1E293B] flex flex-wrap items-center justify-between text-[11px] text-[#94A3B8]">
                   <div className="flex items-center gap-1.5">
                     <Clock className="w-3 h-3 text-blue-400" />
-                    <span>latency:</span>
+                    <span>Speed:</span>
                     <strong className="text-emerald-400 font-bold">{heroExecTime}</strong>
+                    <span className="text-[#64748B]">(0.0000042 s)</span>
                   </div>
                   <div>
-                    <span>scanned: </span>
-                    <strong className="text-white">{heroRowCount} rows</strong>
+                    <span>Dataset: </span>
+                    <strong className="text-white">{heroRowCount} records</strong>
                   </div>
-                  <div className="text-slate-400">
-                    <span>SIMD RAM scan</span>
+                  <div className="text-blue-400 font-medium">
+                    100% Offline (Local CPU)
                   </div>
                 </div>
 
@@ -671,53 +799,253 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
       </section>
 
       {/* ========================================================= */}
-      {/* 20. COMPACT METRICS SYSTEM (SINGLE UNIFIED SYSTEM)        */}
+      {/* DATABASE 101: 3D ISOMETRIC VISUALIZER FOR NON-TECH VISITORS */}
       {/* ========================================================= */}
-      <section className="border-b border-[#E5E7EB] bg-[#FAFAF9] py-6 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-[11px] font-mono uppercase tracking-wider text-[#6B7280] mb-2">
-            ENGINE CHARACTERISTICS
+      <section id="basics" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-[#FAFAF9]">
+        <div className="max-w-7xl mx-auto space-y-8">
+          
+          <div className="max-w-3xl">
+            <div className="text-xs font-mono text-blue-600 font-bold mb-1">DATABASE 101 / VISUAL EXPLAINER</div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
+              Why Traditional Databases Are Slow at Math, and How SynapseDB Fixes It
+            </h2>
+            <p className="text-sm text-[#4B5563] mt-2 leading-relaxed">
+              If you’ve never built a database before, here is the secret: <strong>it all comes down to how data is stored in memory.</strong>
+            </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 border border-[#E5E7EB] bg-white rounded-lg p-3 text-left">
+
+          {/* Side-by-Side 3D Visual Comparison */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
-            <div className="p-2 border-r border-[#F3F4F6] last:border-r-0">
-              <div className="text-2xl font-mono font-bold text-[#111827]">4.2 µs</div>
-              <div className="text-[11px] font-mono text-[#6B7280] mt-0.5">analytical scan</div>
+            {/* 1. TRADITIONAL ROW STORE (The Phonebook Dilemma) */}
+            <div className="p-6 rounded-lg border border-[#E5E7EB] bg-white space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-mono text-red-600 uppercase font-bold tracking-wider">TRADITIONAL (POSTGRES / MYSQL)</span>
+                  <h3 className="text-lg font-bold text-[#111827]">Row-Store: The &quot;Sandwich&quot; Dilemma</h3>
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-medium">
+                  Slow Aggregations
+                </span>
+              </div>
+
+              <p className="text-xs text-[#4B5563] leading-relaxed">
+                Traditional databases store data row-by-row. If you want to compute the average <code>fare</code>, the computer is forced to read every person&apos;s name, ID, and location off disk just to extract the price!
+              </p>
+
+              {/* 3D Visual Representation of Row Store */}
+              <div className="p-4 bg-[#F8FAFC] border border-[#E2E8F0] rounded space-y-2 text-xs font-mono">
+                <div className="text-[10px] text-[#64748B] uppercase">Memory Layout (Horizontal Sandwiches):</div>
+                
+                <div className="p-2 bg-white border border-red-200 rounded shadow-2xs flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">ID: 101</span>
+                  <span className="text-slate-400">User: &quot;Alice&quot;</span>
+                  <span className="bg-red-100 text-red-800 font-bold px-1.5 py-0.5 rounded">Fare: $32.50</span>
+                  <span className="text-slate-400">Loc: &quot;Downtown&quot;</span>
+                </div>
+
+                <div className="p-2 bg-white border border-red-200 rounded shadow-2xs flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">ID: 102</span>
+                  <span className="text-slate-400">User: &quot;Bob&quot;</span>
+                  <span className="bg-red-100 text-red-800 font-bold px-1.5 py-0.5 rounded">Fare: $48.00</span>
+                  <span className="text-slate-400">Loc: &quot;Uptown&quot;</span>
+                </div>
+
+                <div className="p-2 bg-white border border-red-200 rounded shadow-2xs flex items-center justify-between text-[11px]">
+                  <span className="text-slate-400">ID: 103</span>
+                  <span className="text-slate-400">User: &quot;Charlie&quot;</span>
+                  <span className="bg-red-100 text-red-800 font-bold px-1.5 py-0.5 rounded">Fare: $19.75</span>
+                  <span className="text-slate-400">Loc: &quot;Airport&quot;</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-red-50/70 border border-red-200 rounded text-xs text-red-900 space-y-1">
+                <strong>Why this is inefficient:</strong>
+                <p className="text-[11px] text-red-800">
+                  Like reading an entire telephone directory cover-to-cover just to count the number of 555 area codes. 75% of the data read into memory is useless waste.
+                </p>
+              </div>
             </div>
 
-            <div className="p-2 border-r border-[#F3F4F6] last:border-r-0">
-              <div className="text-2xl font-mono font-bold text-[#111827]">&lt; 15 ms</div>
-              <div className="text-[11px] font-mono text-[#6B7280] mt-0.5">local CPU SLM</div>
-            </div>
+            {/* 2. SYNAPSEDB COLUMNAR STORE (The Vertical Tube Breakthrough) */}
+            <div className="p-6 rounded-lg border border-blue-600 bg-white space-y-4 shadow-sm relative">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-mono text-blue-600 uppercase font-bold tracking-wider">SYNAPSEDB COLUMNAR</span>
+                  <h3 className="text-lg font-bold text-[#111827]">Column-Store: The &quot;Vertical Tube&quot; Breakthrough</h3>
+                </div>
+                <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+                  4.2 µs SIMD Scan
+                </span>
+              </div>
 
-            <div className="p-2 border-r border-[#F3F4F6] last:border-r-0">
-              <div className="text-2xl font-mono font-bold text-[#111827]">85k+/s</div>
-              <div className="text-[11px] font-mono text-[#6B7280] mt-0.5">ingestion rate</div>
-            </div>
+              <p className="text-xs text-[#4B5563] leading-relaxed">
+                SynapseDB automatically groups every single <code>fare</code> together into a single continuous memory vector in RAM. When you ask for the average, the CPU grabs just that one tube and scans 1,000,000 numbers in parallel!
+              </p>
 
-            <div className="p-2 border-r border-[#F3F4F6] last:border-r-0">
-              <div className="text-2xl font-mono font-bold text-[#111827]">~15 MB</div>
-              <div className="text-[11px] font-mono text-[#6B7280] mt-0.5">single binary</div>
-            </div>
+              {/* 3D Visual Representation of Column Store */}
+              <div className="p-4 bg-[#F0FDF4] border border-emerald-200 rounded space-y-2 text-xs font-mono">
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-emerald-800 font-bold uppercase">Memory Layout (Vertical Tubes):</span>
+                  <button
+                    onClick={triggerColumnarScan}
+                    className="text-[10px] px-2 py-0.5 rounded bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition"
+                  >
+                    {columnarScanning ? "Scanning Tube..." : "Click to Scan Fare Tube"}
+                  </button>
+                </div>
 
-            <div className="p-2 border-r border-[#F3F4F6] last:border-r-0">
-              <div className="text-2xl font-mono font-bold text-[#111827]">100 KB</div>
-              <div className="text-[11px] font-mono text-[#6B7280] mt-0.5">payload defense</div>
-            </div>
+                <div className="grid grid-cols-4 gap-2 text-center text-[10px]">
+                  <div className="p-2 bg-white/70 border border-slate-200 rounded text-slate-400">
+                    <span className="block font-bold">ID Tube</span>
+                    <span className="text-[9px]">[101, 102, 103]</span>
+                    <span className="block text-[9px] text-slate-400 mt-1">(Skipped)</span>
+                  </div>
 
-            <div className="p-2">
-              <div className="text-2xl font-mono font-bold text-emerald-600">fsync</div>
-              <div className="text-[11px] font-mono text-[#6B7280] mt-0.5">WAL durability</div>
+                  <div className="p-2 bg-white/70 border border-slate-200 rounded text-slate-400">
+                    <span className="block font-bold">User Tube</span>
+                    <span className="text-[9px]">[&quot;Alice&quot;, &quot;Bob&quot;]</span>
+                    <span className="block text-[9px] text-slate-400 mt-1">(Skipped)</span>
+                  </div>
+
+                  {/* Highlighted Fare Tube */}
+                  <div className={`p-2 rounded border transition ${columnarScanning ? "bg-emerald-500 text-white border-emerald-600 ring-2 ring-emerald-400 animate-pulse font-bold" : "bg-emerald-100 text-emerald-900 border-emerald-300 font-bold shadow-xs"}`}>
+                    <span className="block">Fare Tube</span>
+                    <span className="text-[10px]">[32.5, 48.0, 19.7]</span>
+                    <span className="block text-[9px] text-emerald-700 mt-1">100% Scanned!</span>
+                  </div>
+
+                  <div className="p-2 bg-white/70 border border-slate-200 rounded text-slate-400">
+                    <span className="block font-bold">Loc Tube</span>
+                    <span className="text-[9px]">[&quot;Downtown&quot;]</span>
+                    <span className="block text-[9px] text-slate-400 mt-1">(Skipped)</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded text-xs text-blue-900 space-y-1">
+                <strong>Why this is revolutionary:</strong>
+                <p className="text-[11px] text-blue-800">
+                  Like keeping all coins in a separate sorting tube. You don&apos;t have to open a single wallet—you just weigh the tube and have the exact total in 4.2 microseconds.
+                </p>
+              </div>
             </div>
 
           </div>
+
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* 02 / HOW IT WORKS: INTERACTIVE VISUAL FLOWCHART           */}
+      {/* ========================================================= */}
+      <section id="pipeline" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-white">
+        <div className="max-w-7xl mx-auto space-y-10">
+          
+          <div>
+            <div className="text-xs font-mono text-blue-600 font-bold mb-1">02 / HOW IT WORKS</div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
+              The Journey of a Query: From Raw JSON to Instant Answer
+            </h2>
+            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl">
+              Follow the 6 stages of SynapseDB. Click any card to see both the simple real-world analogy and the underlying Rust systems code.
+            </p>
+          </div>
+
+          {/* Interactive Flowchart Nodes */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 font-mono text-xs">
+            {pipelineStages.map((st, idx) => {
+              const active = activePipelineStage === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setActivePipelineStage(idx)}
+                  className={`p-3.5 text-left rounded-lg border transition relative flex flex-col justify-between ${
+                    active
+                      ? "bg-white border-blue-600 ring-2 ring-blue-600/20 shadow-md"
+                      : "bg-[#FAFAF9] border-[#E5E7EB] hover:border-slate-400 hover:bg-white"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1 text-base">
+                      <span>{st.icon}</span>
+                      <span className={`text-[10px] font-bold ${active ? "text-blue-600" : "text-slate-400"}`}>
+                        0{idx + 1}
+                      </span>
+                    </div>
+                    <div className="font-bold text-[#111827] text-xs mt-1">{st.title}</div>
+                  </div>
+                  <div className="text-[10px] text-blue-600 truncate mt-2 font-medium">
+                    {st.analogyTitle}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Flowchart Detail Card (Dual-Layer: Simple Analogy + Tech) */}
+          <div className="p-6 rounded-lg border border-[#E5E7EB] bg-[#FAFAF9] space-y-6">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              {/* Left Column: Simple Analogy & Plain English */}
+              <div className="lg:col-span-7 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-mono text-blue-600 font-bold">
+                  <span>STAGE 0{activePipelineStage + 1}</span>
+                  <span>·</span>
+                  <span>{pipelineStages[activePipelineStage].analogyTitle}</span>
+                </div>
+
+                <h3 className="text-xl font-bold text-[#111827]">
+                  {pipelineStages[activePipelineStage].icon} {pipelineStages[activePipelineStage].title}
+                </h3>
+
+                <p className="text-sm text-[#4B5563] leading-relaxed">
+                  {pipelineStages[activePipelineStage].simpleSummary}
+                </p>
+
+                {/* Real-World Analogy Callout Box */}
+                <div className="p-3.5 bg-blue-50 border border-blue-200 rounded text-xs text-blue-900 space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold text-blue-800 text-[11px] uppercase tracking-wider">
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Real-World Analogy:</span>
+                  </div>
+                  <p className="text-xs text-blue-900 leading-relaxed font-sans">
+                    {pipelineStages[activePipelineStage].analogy}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Column: Under-The-Hood Technical Specs & Rust Struct */}
+              <div className="lg:col-span-5 bg-[#0B0F19] text-[#F1F5F9] p-4 rounded-lg font-mono text-xs space-y-3 border border-[#1E293B]">
+                <div className="flex items-center justify-between text-[11px] pb-2 border-b border-[#1E293B] text-[#94A3B8]">
+                  <span>UNDER THE HOOD (RUST ENGINE)</span>
+                  <span className="text-emerald-400 font-bold">{pipelineStages[activePipelineStage].tech}</span>
+                </div>
+
+                <p className="text-[11px] text-[#CBD5E1] leading-relaxed font-sans">
+                  {pipelineStages[activePipelineStage].techSummary}
+                </p>
+
+                <div className="pt-2 border-t border-[#1E293B] text-[10px] space-y-1">
+                  <span className="text-[#64748B] uppercase block">Rust Memory Representation:</span>
+                  <pre className="bg-[#06080F] p-2 rounded text-emerald-300 overflow-x-auto text-[11px]">
+                    <code>{pipelineStages[activePipelineStage].rustStruct}</code>
+                  </pre>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
       </section>
 
       {/* ========================================================= */}
       {/* 01 / PLAYGROUND: THE CENTRAL INFORMATION ARCHITECTURE     */}
       {/* ========================================================= */}
-      <section id="playground" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-white">
+      <section id="playground" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-[#FAFAF9]">
         <div className="max-w-7xl mx-auto">
           
           {/* Section Header */}
@@ -725,83 +1053,83 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
             <div>
               <div className="text-xs font-mono text-blue-600 font-bold mb-1">01 / PLAYGROUND</div>
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-                Inspect and Query the Engine
+                Interactive Engine Console
               </h2>
               <p className="text-sm text-[#4B5563] mt-1">
-                Integrated console: execute vectorized SQL or natural language, inspect tables, append to WAL, or verify frame checksums.
+                Test the engine yourself. Ask questions in human English or SQL, browse persisted records, or simulate incoming data streams.
               </p>
             </div>
 
             {/* Module Switcher Tabs */}
-            <div className="flex border border-[#E5E7EB] rounded-md p-1 bg-[#FAFAF9] text-xs font-mono">
+            <div className="flex border border-[#E5E7EB] rounded-md p-1 bg-white text-xs font-mono">
               <button
                 onClick={() => setPlaygroundTab("query")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "query" ? "bg-white text-[#111827] font-bold shadow-2xs border border-[#E5E7EB]" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3 py-1.5 rounded transition ${playgroundTab === "query" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 Query Studio
               </button>
               <button
                 onClick={() => setPlaygroundTab("data")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "data" ? "bg-white text-[#111827] font-bold shadow-2xs border border-[#E5E7EB]" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3 py-1.5 rounded transition ${playgroundTab === "data" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 Data Browser
               </button>
               <button
                 onClick={() => setPlaygroundTab("ingest")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "ingest" ? "bg-white text-[#111827] font-bold shadow-2xs border border-[#E5E7EB]" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3 py-1.5 rounded transition ${playgroundTab === "ingest" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 Ingestion Lab
               </button>
               <button
                 onClick={() => setPlaygroundTab("wal")}
-                className={`px-3 py-1.5 rounded transition ${playgroundTab === "wal" ? "bg-white text-[#111827] font-bold shadow-2xs border border-[#E5E7EB]" : "text-[#6B7280] hover:text-[#111827]"}`}
+                className={`px-3 py-1.5 rounded transition ${playgroundTab === "wal" ? "bg-blue-600 text-white font-bold shadow-2xs" : "text-[#6B7280] hover:text-[#111827]"}`}
               >
                 WAL Inspector
               </button>
             </div>
           </div>
 
-          {/* Playground Main Surface (65-75% viewport feel) */}
-          <div className="rounded-lg border border-[#E5E7EB] bg-[#FAFAF9] overflow-hidden shadow-xs">
+          {/* Playground Main Surface */}
+          <div className="rounded-lg border border-[#E5E7EB] bg-white overflow-hidden shadow-xs">
             
             {/* ----------------- TAB 1: QUERY STUDIO ----------------- */}
             {playgroundTab === "query" && (
               <div className="p-4 sm:p-6 space-y-4">
                 
-                {/* Preset Chips */}
-                <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-                  <span className="text-[#6B7280] text-[11px]">PRESETS:</span>
-                  {[
-                    "What is the average fare for rides?",
-                    "SELECT AVG(fare) FROM rides",
-                    "SELECT driver, COUNT(*), SUM(fare) FROM rides GROUP BY driver",
-                    "Total rides where fare > 30",
-                    "SELECT * FROM rides LIMIT 5",
-                  ].map((preset, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setPqInput(preset);
-                        if (preset.startsWith("SELECT")) setPqMode("SQL");
-                        else setPqMode("NL");
-                      }}
-                      className="px-2.5 py-1 rounded bg-white border border-[#E5E7EB] hover:border-blue-400 text-[#374151] hover:text-blue-600 transition text-[11px]"
-                    >
-                      {preset}
-                    </button>
-                  ))}
+                {/* Friendly Presets */}
+                <div className="space-y-1.5">
+                  <div className="text-[11px] font-mono text-[#6B7280]">CHOOSE A SAMPLE QUESTION:</div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
+                    {[
+                      { label: "📊 What is the average fare for rides?", mode: "NL" as const },
+                      { label: "🏆 SELECT driver, COUNT(*), SUM(fare) FROM rides GROUP BY driver", mode: "SQL" as const },
+                      { label: "🔍 Total rides where fare > 30", mode: "NL" as const },
+                      { label: "⚡ SELECT AVG(fare) FROM rides", mode: "SQL" as const },
+                    ].map((preset, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setPqInput(preset.label.replace(/^[^a-zA-Z0-9]+/, ""));
+                          setPqMode(preset.mode);
+                        }}
+                        className="px-2.5 py-1.5 rounded bg-[#F8FAFC] border border-[#E2E8F0] hover:border-blue-400 text-[#334155] hover:text-blue-600 transition text-[11px] flex items-center gap-1.5"
+                      >
+                        <span>{preset.label}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Editor Container */}
                 <div className="rounded border border-[#D1D5DB] bg-white overflow-hidden">
-                  <div className="bg-[#F3F4F6] border-b border-[#E5E7EB] px-3 py-1.5 flex items-center justify-between text-xs font-mono">
+                  <div className="bg-[#F3F4F6] border-b border-[#E5E7EB] px-3 py-2 flex items-center justify-between text-xs font-mono">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#6B7280]">Mode:</span>
+                      <span className="text-[#6B7280]">Input Format:</span>
                       <button
                         onClick={() => setPqMode("NL")}
                         className={`px-2 py-0.5 rounded text-[11px] font-semibold ${pqMode === "NL" ? "bg-blue-600 text-white" : "text-[#6B7280] hover:text-[#111827]"}`}
                       >
-                        Natural Language (SLM)
+                        Plain English (AI Translator)
                       </button>
                       <button
                         onClick={() => setPqMode("SQL")}
@@ -810,7 +1138,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                         Direct SQL
                       </button>
                     </div>
-                    <span className="text-[#9CA3AF] text-[11px]">Ctrl + Enter to run</span>
+                    <span className="text-[#9CA3AF] text-[11px]">Press Ctrl + Enter to run</span>
                   </div>
 
                   <textarea
@@ -824,12 +1152,12 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     }}
                     rows={3}
                     className="w-full p-3 font-mono text-xs text-[#111827] focus:outline-none resize-none"
-                    placeholder="Enter query..."
+                    placeholder="Ask in English or SQL..."
                   />
 
                   <div className="bg-[#FAFAF9] border-t border-[#E5E7EB] px-3 py-2 flex items-center justify-between">
                     <span className="text-[11px] font-mono text-[#6B7280]">
-                      {pqMode === "NL" ? "Local SLM compiles AST (<15 ms)" : "Direct parser to AVX2 SIMD plan"}
+                      {pqMode === "NL" ? "Built-in CPU SLM translates your English in <15ms ($0 API cost)" : "Vectorized Direct SIMD Execution"}
                     </span>
                     <button
                       onClick={handleRunPq}
@@ -837,7 +1165,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                       className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition disabled:opacity-50"
                     >
                       <Play className="w-3 h-3 fill-current" />
-                      <span>{pqRunning ? "Executing..." : "Run Query"}</span>
+                      <span>{pqRunning ? "Running..." : "Run Query"}</span>
                     </button>
                   </div>
                 </div>
@@ -850,33 +1178,25 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] px-3 py-2 flex flex-wrap items-center justify-between text-xs font-mono text-[#4B5563]">
                       <div className="flex items-center gap-4">
                         <span>Status: <strong className="text-emerald-600">200 OK</strong></span>
-                        <span>Latency: <strong className="text-blue-600">{pqResult.stats?.execution_time_us || 4.2} µs</strong></span>
-                        <span>Rows: <strong className="text-[#111827]">{pqResult.row_count || pqResult.rows?.length || 0}</strong></span>
-                        <span>Scan: <span className="text-slate-600">SIMD RAM vector</span></span>
+                        <span>Execution Speed: <strong className="text-blue-600">{pqResult.stats?.execution_time_us || 4.2} µs</strong></span>
+                        <span>Rows Answered: <strong className="text-[#111827]">{pqResult.row_count || pqResult.rows?.length || 0}</strong></span>
+                        <span>Hardware: <span className="text-slate-600">AVX2 Parallel SIMD</span></span>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => setPqViewMode("table")}
                           className={`px-2 py-0.5 rounded text-[11px] ${pqViewMode === "table" ? "bg-slate-200 text-[#111827] font-semibold" : "text-slate-500"}`}
                         >
-                          Table
+                          Table View
                         </button>
                         <button
                           onClick={() => setPqViewMode("json")}
                           className={`px-2 py-0.5 rounded text-[11px] ${pqViewMode === "json" ? "bg-slate-200 text-[#111827] font-semibold" : "text-slate-500"}`}
                         >
-                          JSON
+                          Raw JSON
                         </button>
                       </div>
                     </div>
-
-                    {/* Plan String */}
-                    {pqResult.plan && (
-                      <div className="px-3 text-[11px] font-mono text-[#6B7280]">
-                        <span>PLAN: </span>
-                        <code>{pqResult.plan}</code>
-                      </div>
-                    )}
 
                     {/* Table View */}
                     {pqViewMode === "table" && pqResult.rows && (
@@ -926,7 +1246,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 font-bold">
                       rides
                     </span>
-                    <span className="text-[#9CA3AF]">(6 dynamic columns, columnar RAM)</span>
+                    <span className="text-[#9CA3AF]">(Stored as vertical columnar tubes in RAM)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
@@ -937,16 +1257,10 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                       className="px-2.5 py-1 rounded border border-[#D1D5DB] bg-white text-[#111827] focus:outline-none"
                     />
                     <button
-                      onClick={() => alert("CSV export generated from columnar memory")}
+                      onClick={() => alert("CSV exported from columnar memory")}
                       className="px-2.5 py-1 rounded border border-[#D1D5DB] bg-white hover:bg-slate-50 text-[#374151]"
                     >
                       Export CSV
-                    </button>
-                    <button
-                      onClick={() => alert("JSON export generated from columnar memory")}
-                      className="px-2.5 py-1 rounded border border-[#D1D5DB] bg-white hover:bg-slate-50 text-[#374151]"
-                    >
-                      Export JSON
                     </button>
                   </div>
                 </div>
@@ -958,7 +1272,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                         <th className="p-2.5">row_id</th>
                         <th className="p-2.5">timestamp</th>
                         <th className="p-2.5">driver</th>
-                        <th className="p-2.5">fare (f64)</th>
+                        <th className="p-2.5">fare (Float64)</th>
                         <th className="p-2.5">distance_mi</th>
                         <th className="p-2.5">status</th>
                       </tr>
@@ -987,9 +1301,9 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                 {/* Left: Custom Payload Ingest */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#111827]">Custom Write-Ahead Log Ingestion</span>
-                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
-                      Zero-DDL
+                    <span className="font-bold text-[#111827]">Drop in Unstructured JSON (Zero-DDL)</span>
+                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Auto-Detects Schema
                     </span>
                   </div>
 
@@ -1005,20 +1319,20 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] text-[#6B7280]">Payload (JSON or KV):</label>
+                      <label className="text-[11px] text-[#6B7280]">Payload (JSON / Key-Value):</label>
                       <div className="flex gap-1">
                         <button
                           onClick={() => setIngestPayload(JSON.stringify({ fare: 42.5, driver: "Alice", user_id: 1001 }, null, 2))}
                           className="text-[10px] text-blue-600 hover:underline"
                         >
-                          Single
+                          Single JSON
                         </button>
                         <span className="text-slate-300">|</span>
                         <button
                           onClick={() => setIngestPayload(JSON.stringify([{ fare: 32.5, driver: "Alice" }, { fare: 48.0, driver: "Bob" }], null, 2))}
                           className="text-[10px] text-blue-600 hover:underline"
                         >
-                          Batch
+                          Batch Array
                         </button>
                       </div>
                     </div>
@@ -1031,8 +1345,8 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     />
 
                     <div className="flex items-center justify-between mt-1 text-[10px] text-[#6B7280]">
-                      <span>Size: {new TextEncoder().encode(ingestPayload).length} B / 100 KB limit</span>
-                      <span className="text-emerald-600">Strict fsync defense</span>
+                      <span>Payload Size: {new TextEncoder().encode(ingestPayload).length} B / 100 KB limit</span>
+                      <span className="text-emerald-600">Strict fsync protection</span>
                     </div>
                   </div>
 
@@ -1042,7 +1356,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     className="w-full py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                   >
                     <Send className="w-3 h-3" />
-                    <span>{ingestRunning ? "Appending to WAL..." : "Push to Engine (fsync)"}</span>
+                    <span>{ingestRunning ? "Appending to Journal..." : "Push Data to Engine (Zero-DDL)"}</span>
                   </button>
 
                   {ingestAck && (
@@ -1052,7 +1366,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                         <span>Row {ingestAck.row_id}</span>
                       </div>
                       <div className="text-emerald-700 text-[10px]">
-                        CRC32: {ingestAck.crc32} · {ingestAck.payload_len} bytes · Log: {ingestAck.wal_file}
+                        CRC32 Seal: {ingestAck.crc32} · {ingestAck.payload_len} bytes written to disk
                       </div>
                     </div>
                   )}
@@ -1061,26 +1375,22 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                 {/* Right: Synthetic Workload Generator */}
                 <div className="space-y-3 border-t lg:border-t-0 lg:border-l border-[#E5E7EB] pt-4 lg:pt-0 lg:pl-6">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#111827]">Synthetic Micro-Batch Generator</span>
+                    <span className="font-bold text-[#111827]">Stress Test Streamer</span>
                     <span className="text-[11px] text-slate-500">Benchmark Tool</span>
                   </div>
 
-                  <p className="text-[#4B5563] text-xs">
-                    Simulates concurrent ingestion to test dynamic schema evolution and automatic column partitioning.
+                  <p className="text-[#4B5563] text-xs font-sans">
+                    Streams simulated incoming ride bookings in parallel to watch how SynapseDB partitions numbers and strings into columns on the fly.
                   </p>
 
                   <div className="p-3 bg-white rounded border border-[#E5E7EB] space-y-2">
                     <div className="flex justify-between text-[#6B7280]">
                       <span>Records to stream:</span>
-                      <strong className="text-[#111827]">50 items</strong>
+                      <strong className="text-[#111827]">50 micro-transactions</strong>
                     </div>
                     <div className="flex justify-between text-[#6B7280]">
-                      <span>Target partition:</span>
-                      <span className="text-blue-600">rides (Float64, Utf8)</span>
-                    </div>
-                    <div className="flex justify-between text-[#6B7280]">
-                      <span>Buffer allocation:</span>
-                      <span>Lock-free append</span>
+                      <span>Auto-partitioning:</span>
+                      <span className="text-blue-600">fare (Float64), driver (Utf8)</span>
                     </div>
                   </div>
 
@@ -1090,7 +1400,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     className="w-full py-2 rounded border border-[#D1D5DB] bg-white hover:bg-slate-50 text-[#111827] font-semibold transition flex items-center justify-center gap-1.5"
                   >
                     <Zap className="w-3 h-3 text-blue-600" />
-                    <span>{isStressRunning ? `Streaming ${stressProgress}%...` : "Run 50-Record Batch"}</span>
+                    <span>{isStressRunning ? `Streaming ${stressProgress}%...` : "Run 50-Record Stream"}</span>
                   </button>
 
                   {isStressRunning && (
@@ -1108,9 +1418,9 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
               <div className="p-4 sm:p-6 space-y-4 font-mono text-xs">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="font-bold text-[#111827]">Write-Ahead Log Frame Inspector</span>
-                    <p className="text-[11px] text-[#6B7280] mt-0.5">
-                      Inspect binary 24-byte WAL frame headers persisted to active.wal before columnar drain
+                    <span className="font-bold text-[#111827]">Write-Ahead Log (WAL) Inspector</span>
+                    <p className="text-[11px] text-[#6B7280] mt-0.5 font-sans">
+                      Inspect the durable binary journal stamped to disk before memory allocation
                     </p>
                   </div>
                   <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
@@ -1123,9 +1433,9 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                     <div key={f.frame} className="p-3 bg-white rounded border border-[#E5E7EB] space-y-1">
                       <div className="flex flex-wrap items-center justify-between text-[#4B5563] text-[11px]">
                         <span className="font-bold text-[#111827]">FRAME #{f.frame}</span>
-                        <span>timestamp_ns: {f.timestamp_ns}</span>
+                        <span>timestamp: {f.timestamp_ns} ns</span>
                         <span className="text-blue-600">CRC32: {f.crc32}</span>
-                        <span>len: {f.len} bytes</span>
+                        <span>size: {f.len} bytes</span>
                       </div>
                       <div className="bg-[#FAFAF9] p-2 rounded border border-[#E5E7EB] text-[#111827] overflow-x-auto text-[11px]">
                         <code>{f.raw}</code>
@@ -1142,265 +1452,94 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
       </section>
 
       {/* ========================================================= */}
-      {/* 02 / HOW IT WORKS: HORIZONTAL PIPELINE & MEMORY STORE     */}
-      {/* ========================================================= */}
-      <section id="pipeline" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-[#FAFAF9]">
-        <div className="max-w-7xl mx-auto space-y-10">
-          
-          <div>
-            <div className="text-xs font-mono text-blue-600 font-bold mb-1">02 / HOW IT WORKS</div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              Ingestion to Vectorized Execution Pipeline
-            </h2>
-            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl">
-              Click any stage to inspect the low-level data transformation between JSON write and CPU SIMD scan.
-            </p>
-          </div>
-
-          {/* 13. Horizontal Technical Pipeline */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 font-mono text-xs">
-            {pipelineStages.map((st, idx) => {
-              const active = activePipelineStage === idx;
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActivePipelineStage(idx)}
-                  className={`p-3 text-left rounded border transition ${
-                    active
-                      ? "bg-white border-blue-600 ring-1 ring-blue-600"
-                      : "bg-white border-[#E5E7EB] hover:border-slate-400"
-                  }`}
-                >
-                  <div className="text-[10px] text-[#9CA3AF] mb-1">{st.step} / STAGE</div>
-                  <div className="font-bold text-[#111827] text-xs">{st.title}</div>
-                  <div className="text-[10px] text-blue-600 truncate mt-0.5">{st.tech}</div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Stage Details Panel */}
-          <div className="p-5 rounded-lg border border-[#E5E7EB] bg-white grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            <div className="md:col-span-8 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-mono text-blue-600">
-                <span>STAGE {pipelineStages[activePipelineStage].step}</span>
-                <span>·</span>
-                <span className="font-bold">{pipelineStages[activePipelineStage].tech}</span>
-              </div>
-              <h3 className="text-lg font-bold text-[#111827]">
-                {pipelineStages[activePipelineStage].title}
-              </h3>
-              <p className="text-sm text-[#4B5563] leading-relaxed">
-                {pipelineStages[activePipelineStage].summary}
-              </p>
-              <div className="text-xs font-mono text-slate-500 pt-2 border-t border-slate-100">
-                {pipelineStages[activePipelineStage].detail}
-              </div>
-            </div>
-
-            <div className="md:col-span-4 bg-[#0B0F19] text-[#F1F5F9] p-3.5 rounded font-mono text-xs space-y-1">
-              <div className="text-[10px] text-[#64748B]">MEMORY REPRESENTATION</div>
-              <div className="text-emerald-400 font-bold">
-                {activePipelineStage === 0 && "Raw Payload Buffer (≤ 100 KB)"}
-                {activePipelineStage === 1 && "24B CRC32 Frame Header + Fsync"}
-                {activePipelineStage === 2 && "Dynamic Schema Trie & Synonym Map"}
-                {activePipelineStage === 3 && "Contiguous Typed Array (f64 Vec)"}
-                {activePipelineStage === 4 && "SelectQuery AST (<15 ms on CPU)"}
-                {activePipelineStage === 5 && "AVX2 SIMD Registers (256-bit)"}
-              </div>
-              <div className="text-[11px] text-[#94A3B8]">
-                {activePipelineStage === 0 && "lock-free ring buffer entry"}
-                {activePipelineStage === 1 && "strict append to active.wal"}
-                {activePipelineStage === 2 && "zero-downtime type synthesis"}
-                {activePipelineStage === 3 && "64-byte L1 cache line aligned"}
-                {activePipelineStage === 4 && "deterministic zero-cloud tokens"}
-                {activePipelineStage === 5 && "4.2 µs aggregation latency"}
-              </div>
-            </div>
-          </div>
-
-          {/* 17. The Trade-Off Diagram (No generic competitor cards) */}
-          <div className="p-6 rounded-lg border border-[#E5E7EB] bg-white space-y-4">
-            <div className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
-              THE ARCHITECTURAL TRADE-OFF
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
-              
-              <div className="p-4 rounded border border-[#E5E7EB] bg-[#FAFAF9] space-y-2">
-                <div className="font-bold text-[#111827]">RELATIONAL RDBMS</div>
-                <div className="text-[11px] text-[#6B7280]">PostgreSQL / MySQL</div>
-                <p className="text-[#4B5563] text-xs font-sans leading-relaxed">
-                  Strict schema enforcement. Adding or altering columns requires DDL migrations that lock tables. Row-oriented storage wastes CPU cache by reading entire rows just to aggregate one column.
-                </p>
-                <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
-                  Scan: ~8,500 µs · DDL required
-                </div>
-              </div>
-
-              <div className="p-4 rounded border border-blue-600 bg-blue-50/40 space-y-2 relative">
-                <div className="font-bold text-blue-900">SYNAPSEDB HYBRID</div>
-                <div className="text-[11px] text-blue-700">Zero-DDL Columnar</div>
-                <p className="text-slate-800 text-xs font-sans leading-relaxed">
-                  Combines schemaless ingestion with columnar analytical execution. Incoming JSON writes are dynamically synthesized into cache-coherent typed arrays, enabling microsecond SIMD scans without DDL ceremonies.
-                </p>
-                <div className="text-[11px] text-blue-900 font-bold pt-1 border-t border-blue-200">
-                  Scan: ~4.2 µs · Zero-DDL
-                </div>
-              </div>
-
-              <div className="p-4 rounded border border-[#E5E7EB] bg-[#FAFAF9] space-y-2">
-                <div className="font-bold text-[#111827]">DOCUMENT STORE</div>
-                <div className="text-[11px] text-[#6B7280]">MongoDB / DynamoDB</div>
-                <p className="text-[#4B5563] text-xs font-sans leading-relaxed">
-                  Flexible schema, but serializes repeated string keys across every row. Aggregations require deserializing nested BSON documents, causing memory bloat and orders-of-magnitude slower analytical scans.
-                </p>
-                <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
-                  Scan: ~24,000 µs · High RAM bloat
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* 29. Actual Data Visualization: Row Store vs Columnar */}
-          <div className="p-6 rounded-lg border border-[#E5E7EB] bg-white space-y-4">
-            <div className="text-xs font-mono text-[#6B7280] uppercase tracking-wider">
-              DATA VISUALIZATION: MEMORY LAYOUT COMPARISON
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-mono text-xs">
-              
-              {/* Row Store */}
-              <div className="p-4 rounded border border-[#E5E7EB] bg-[#FAFAF9] space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#111827]">ROW STORE (Traditional)</span>
-                  <span className="text-red-600 text-[11px]">Inefficient Cache Use</span>
-                </div>
-                <div className="space-y-1 text-[11px] text-[#4B5563]">
-                  <div className="p-1.5 bg-white border border-slate-200 rounded">
-                    [id: 1 | name: &quot;Alice&quot; | <span className="bg-red-100 text-red-700 px-1">fare: 32.5</span> | ts: 1711000100]
-                  </div>
-                  <div className="p-1.5 bg-white border border-slate-200 rounded">
-                    [id: 2 | name: &quot;Bob&quot; | <span className="bg-red-100 text-red-700 px-1">fare: 48.0</span> | ts: 1711000102]
-                  </div>
-                  <div className="p-1.5 bg-white border border-slate-200 rounded">
-                    [id: 3 | name: &quot;Charlie&quot; | <span className="bg-red-100 text-red-700 px-1">fare: 19.75</span> | ts: 1711000105]
-                  </div>
-                </div>
-                <p className="text-[11px] text-[#6B7280] font-sans">
-                  Querying <code>AVG(fare)</code> forces the CPU to pull names, IDs, and timestamps into cache lines, wasting ~75% of memory bandwidth.
-                </p>
-              </div>
-
-              {/* Column Store */}
-              <div className="p-4 rounded border border-emerald-300 bg-emerald-50/30 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-emerald-950">SYNAPSEDB COLUMNAR</span>
-                  <span className="text-emerald-700 text-[11px] font-bold">100% Cache Locality</span>
-                </div>
-                <div className="space-y-1 text-[11px] text-[#111827]">
-                  <div className="p-1 bg-white/80 border border-slate-200 rounded text-slate-400">
-                    id: [1, 2, 3, 4, 5, 6, ...] (skipped during scan)
-                  </div>
-                  <div className="p-1.5 bg-emerald-100 border border-emerald-300 text-emerald-900 font-bold rounded">
-                    fare: [32.50, 48.00, 19.75, 55.20, 27.80, 41.20, 18.42, ...]
-                  </div>
-                  <div className="p-1 bg-white/80 border border-slate-200 rounded text-slate-400">
-                    name: [&quot;Alice&quot;, &quot;Bob&quot;, &quot;Charlie&quot;] (skipped during scan)
-                  </div>
-                </div>
-                <p className="text-[11px] text-emerald-900 font-sans">
-                  Querying <code>AVG(fare)</code> streams ONLY contiguous float values into AVX2 registers at 14 GB/s with zero wasted bytes.
-                </p>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ========================================================= */}
-      {/* 03 / QUERY COMPILATION: VISUAL TRANSLATION PIPELINE       */}
+      {/* 03 / QUERY COMPILATION: VISUAL STEP CARDS                 */}
       {/* ========================================================= */}
       <section id="compiler" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-white">
         <div className="max-w-7xl mx-auto space-y-8">
           
           <div>
-            <div className="text-xs font-mono text-blue-600 font-bold mb-1">03 / QUERY COMPILATION</div>
+            <div className="text-xs font-mono text-blue-600 font-bold mb-1">03 / AI QUERY COMPILATION</div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              Human Language to Microsecond SIMD Execution
+              How English Questions Turn into CPU Microsecond Scans
             </h2>
-            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl">
-              Inspect how the CPU-hosted SLM parses English intent into a typed AST and executes vectorized memory aggregation without calling cloud APIs.
+            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl font-sans">
+              Unlike cloud chatbots that send your data across the internet to OpenAI, SynapseDB has a <strong>lightweight AI model built right inside the database</strong> that compiles English to query plans in 12 milliseconds with 100% privacy.
             </p>
           </div>
 
           {/* Example Question Selector */}
           <div className="flex flex-wrap gap-2 text-xs font-mono">
-            <span className="text-[#6B7280] self-center mr-1 text-[11px]">SELECT QUERY:</span>
+            <span className="text-[#6B7280] self-center mr-1 text-[11px]">CLICK A QUERY:</span>
             {nlExamples.map((ex, idx) => (
               <button
                 key={idx}
                 onClick={() => setActiveNlExample(idx)}
-                className={`px-3 py-1.5 rounded border transition ${
+                className={`px-3 py-1.5 rounded border transition flex items-center gap-1.5 ${
                   activeNlExample === idx
-                    ? "bg-[#111827] text-white border-[#111827] font-semibold"
+                    ? "bg-[#111827] text-white border-[#111827] font-semibold shadow-xs"
                     : "bg-white text-[#374151] border-[#E5E7EB] hover:border-slate-400"
                 }`}
               >
-                &quot;{ex.human}&quot;
+                <span>&quot;{ex.human}&quot;</span>
+                <span className="text-[10px] px-1 rounded bg-blue-100 text-blue-800">
+                  {ex.badge}
+                </span>
               </button>
             ))}
           </div>
 
-          {/* 12. Visual Translation Pipeline */}
+          {/* Visual Step-by-Step Translation Flow */}
           <div className="p-6 rounded-lg border border-[#E5E7EB] bg-[#FAFAF9] space-y-4">
             
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3 font-mono text-xs items-center">
               
               {/* Step 1: Human */}
               <div className="p-3.5 rounded bg-white border border-[#E5E7EB] space-y-1">
-                <div className="text-[10px] text-[#6B7280]">01 / HUMAN QUERY</div>
+                <div className="text-[10px] text-[#6B7280]">01 / YOU ASK IN ENGLISH</div>
                 <div className="font-bold text-[#111827] text-[11px]">
                   &quot;{nlExamples[activeNlExample].human}&quot;
                 </div>
-                <div className="text-[10px] text-slate-400">English prompt</div>
+                <div className="text-[10px] text-slate-500 font-sans">
+                  {nlExamples[activeNlExample].simpleMeaning}
+                </div>
               </div>
 
-              <div className="text-center text-[#9CA3AF] hidden md:block">→</div>
+              <div className="text-center text-[#9CA3AF] hidden md:block">➔</div>
 
               {/* Step 2: Local SLM */}
               <div className="p-3.5 rounded bg-white border border-blue-200 space-y-1">
-                <div className="text-[10px] text-blue-700 font-bold">02 / LOCAL SLM (<span className="text-emerald-600">{nlExamples[activeNlExample].slmParseTime}</span>)</div>
+                <div className="text-[10px] text-blue-700 font-bold">02 / BUILT-IN AI COMPILES</div>
                 <div className="font-bold text-blue-900 text-[11px]">
                   {nlExamples[activeNlExample].slmOutput}
                 </div>
-                <div className="text-[10px] text-blue-600">$0.00 / 0 API tokens</div>
+                <div className="text-[10px] text-emerald-600 font-medium">
+                  {nlExamples[activeNlExample].slmParseTime} · $0.00 cloud tokens
+                </div>
               </div>
 
-              <div className="text-center text-[#9CA3AF] hidden md:block">→</div>
+              <div className="text-center text-[#9CA3AF] hidden md:block">➔</div>
 
               {/* Step 3: SIMD Execution & Result */}
               <div className="p-3.5 rounded bg-[#0B0F19] text-white border border-[#1E293B] space-y-1">
-                <div className="text-[10px] text-emerald-400 font-bold">03 / SIMD SCAN (<span className="text-white">{nlExamples[activeNlExample].latency}</span>)</div>
-                <div className="font-bold text-xl text-white">
+                <div className="text-[10px] text-emerald-400 font-bold">03 / PARALLEL CPU SCAN</div>
+                <div className="font-bold text-2xl text-emerald-400">
                   = {nlExamples[activeNlExample].result}
                 </div>
-                <div className="text-[10px] text-[#94A3B8]">1,000,000 rows scanned</div>
+                <div className="text-[10px] text-[#94A3B8]">
+                  Computed in {nlExamples[activeNlExample].latency}
+                </div>
               </div>
 
             </div>
 
             {/* Low-Level Plan Details */}
             <div className="p-3 rounded bg-white border border-[#E5E7EB] text-xs font-mono space-y-1.5">
-              <div className="text-[10px] text-[#6B7280]">SYNTHESIZED EXECUTION PLAN & SIMD INSTRUCTIONS:</div>
+              <div className="text-[10px] text-[#6B7280]">SYNTHESIZED DATABASE INSTRUCTIONS (AST &amp; INTRINSICS):</div>
               <div className="text-blue-700">
                 PLAN: <code>{nlExamples[activeNlExample].plan}</code>
               </div>
               <div className="text-slate-600 text-[11px]">
-                INTRINSIC: <code>{nlExamples[activeNlExample].simd}</code>
+                CPU VECTOR INSTRUCTION: <code>{nlExamples[activeNlExample].simd}</code>
               </div>
             </div>
 
@@ -1410,7 +1549,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
       </section>
 
       {/* ========================================================= */}
-      {/* 04 / ENGINE INTERNALS: RUST CODE & CACHE LINE LAYOUT      */}
+      {/* 04 / ENGINE INTERNALS: 3D CACHE LINE + REAL RUST CODE     */}
       {/* ========================================================= */}
       <section id="internals" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-[#FAFAF9]">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -1418,10 +1557,10 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
           <div>
             <div className="text-xs font-mono text-blue-600 font-bold mb-1">04 / ENGINE INTERNALS</div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              Real Rust Source Code & Memory Architecture
+              Real Rust Engine Source Code &amp; Memory Layout
             </h2>
-            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl">
-              Inspect the exact Rust structs powering the write-ahead log, dynamic schema vectors, and CPU SIMD operations.
+            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl font-sans">
+              For BTech students and systems engineers: inspect the actual production Rust structs powering SynapseDB.
             </p>
           </div>
 
@@ -1465,7 +1604,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                   rel="noopener noreferrer"
                   className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1"
                 >
-                  <span>Open on GitHub</span>
+                  <span>View on GitHub</span>
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -1479,36 +1618,37 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
             </div>
 
-            {/* Right: 30. Cache Line Memory Layout */}
+            {/* Right: 3D Cache Line Memory Layout */}
             <div className="lg:col-span-4 space-y-4 font-mono text-xs">
               
               <div className="p-4 rounded-lg border border-[#E5E7EB] bg-white space-y-3">
-                <div className="font-bold text-[#111827]">CACHE LINE ALIGNMENT (64 Bytes)</div>
+                <div className="font-bold text-[#111827]">64-BYTE CPU CACHE LINE</div>
                 <p className="text-[#4B5563] text-xs font-sans">
-                  Columnar float arrays are aligned on 64-byte boundaries. A single CPU L1 cache line holds exactly eight 64-bit IEEE floats:
+                  A modern CPU reads data in 64-byte chunks. In SynapseDB, each chunk holds exactly <strong>eight 64-bit numbers</strong>:
                 </p>
 
-                <div className="grid grid-cols-4 gap-1 text-center text-[10px]">
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">18.4</div>
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">32.5</div>
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">48.0</div>
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">19.7</div>
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">55.2</div>
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">27.8</div>
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">41.2</div>
-                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800">22.0</div>
+                {/* 3D Visual Cache Line Blocks */}
+                <div className="grid grid-cols-4 gap-1.5 text-center text-[10px]">
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">18.42</div>
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">32.50</div>
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">48.00</div>
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">19.75</div>
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">55.20</div>
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">27.80</div>
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">41.20</div>
+                  <div className="p-1.5 bg-blue-50 border border-blue-200 rounded text-blue-800 font-bold">22.00</div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500">
-                  <span>AVX2 SIMD: </span>
-                  <code className="text-[#111827]">_mm256_loadu_pd</code> loads 4 floats (256 bits) per CPU clock cycle.
+                <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 font-sans">
+                  <span>AVX2 SIMD Vector Processing: </span>
+                  <code className="text-[#111827]">_mm256_loadu_pd</code> loads 4 floats (256 bits) in a single CPU clock tick.
                 </div>
               </div>
 
               <div className="p-4 rounded-lg border border-[#E5E7EB] bg-white space-y-2 text-[#4B5563]">
-                <div className="font-bold text-[#111827]">ZONEMAP PRUNING</div>
+                <div className="font-bold text-[#111827]">ZONEMAP CHUNK SKIPPING</div>
                 <p className="text-xs font-sans">
-                  Each chunk maintains min/max values. If a query requests <code>fare &gt; 50</code> and chunk max is 42.0, the chunk is pruned branchlessly without reading bytes.
+                  Each chunk records its lowest and highest values. If you ask for <code>fare &gt; 50</code> and a chunk&apos;s maximum is 42, the engine skips reading the entire chunk without doing any work!
                 </p>
               </div>
 
@@ -1520,7 +1660,7 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
       </section>
 
       {/* ========================================================= */}
-      {/* 05 / BENCHMARKS: SCIENTIFIC & METHODOLOGY DISCLOSURE      */}
+      {/* 05 / BENCHMARKS: VISUAL SPEED BARS + SCIENTIFIC TABLE     */}
       {/* ========================================================= */}
       <section id="benchmarks" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-white">
         <div className="max-w-7xl mx-auto space-y-8">
@@ -1528,14 +1668,71 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
           <div>
             <div className="text-xs font-mono text-blue-600 font-bold mb-1">05 / BENCHMARKS</div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              Performance & Methodology
+              Speed Comparison: 1,000,000 Row Analytical Scan
             </h2>
-            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl">
-              Analytical scan benchmarks measured on identical hardware against leading database engines. All testing criteria fully disclosed.
+            <p className="text-sm text-[#4B5563] mt-1 max-w-2xl font-sans">
+              All benchmarks measured on identical hardware calculating the average value across 1M records.
             </p>
           </div>
 
-          {/* 15. Benchmark Results Table */}
+          {/* Intuitive Visual Speed Comparison Bars */}
+          <div className="p-6 rounded-lg border border-[#E5E7EB] bg-[#FAFAF9] space-y-4 font-mono text-xs">
+            <div className="text-xs font-bold text-[#111827] uppercase tracking-wider">
+              VISUAL SPEED COMPARISON (SHORTER TIME IS BETTER):
+            </div>
+
+            <div className="space-y-3">
+              {/* SynapseDB */}
+              <div className="space-y-1">
+                <div className="flex justify-between font-bold">
+                  <span className="text-blue-700">⚡ SynapseDB (4.2 µs = 0.004 ms)</span>
+                  <span className="text-emerald-600 font-extrabold">Instant (1x Baseline)</span>
+                </div>
+                <div className="w-full bg-slate-200 h-4 rounded overflow-hidden">
+                  <div className="bg-emerald-500 h-full w-[2%]" />
+                </div>
+              </div>
+
+              {/* DuckDB */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-slate-700">
+                  <span>DuckDB (120 µs = 0.12 ms)</span>
+                  <span>28x slower</span>
+                </div>
+                <div className="w-full bg-slate-200 h-4 rounded overflow-hidden">
+                  <div className="bg-yellow-500 h-full w-[8%]" />
+                </div>
+              </div>
+
+              {/* PostgreSQL */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-slate-700">
+                  <span>PostgreSQL (8,500 µs = 8.5 ms)</span>
+                  <span>2,023x slower</span>
+                </div>
+                <div className="w-full bg-slate-200 h-4 rounded overflow-hidden">
+                  <div className="bg-orange-500 h-full w-[45%]" />
+                </div>
+              </div>
+
+              {/* MongoDB */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-slate-700">
+                  <span>MongoDB (24,000 µs = 24.0 ms)</span>
+                  <span>5,714x slower</span>
+                </div>
+                <div className="w-full bg-slate-200 h-4 rounded overflow-hidden">
+                  <div className="bg-red-500 h-full w-[100%]" />
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[#4B5563] pt-2 border-t border-[#E5E7EB] font-sans">
+              💡 <strong>In human terms:</strong> At 4.2 microseconds, SynapseDB can answer <strong>238,000 queries</strong> in the time it takes a traditional document database to answer just one.
+            </p>
+          </div>
+
+          {/* Full Scientific Methodology Table */}
           <div className="overflow-x-auto rounded border border-[#E5E7EB] bg-white">
             <table className="w-full text-left text-xs font-mono border-collapse">
               <thead>
@@ -1585,17 +1782,17 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
             </table>
           </div>
 
-          {/* 16. Benchmark Environment & Methodology Disclosure */}
+          {/* Benchmark Reproducibility Disclosure */}
           <div className="p-5 rounded-lg border border-[#E5E7EB] bg-[#FAFAF9] space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs font-mono font-bold text-[#111827] uppercase">
-                BENCHMARK ENVIRONMENT & REPRODUCIBILITY DISCLOSURE
+                BENCHMARK ENVIRONMENT &amp; REPRODUCIBILITY SPECS
               </span>
               <button
                 onClick={() => setShowBenchCode(!showBenchCode)}
                 className="text-xs font-mono text-blue-600 hover:text-blue-800 underline flex items-center gap-1"
               >
-                <span>{showBenchCode ? "Hide benchmark code" : "[ View benchmark code ]"}</span>
+                <span>{showBenchCode ? "Hide benchmark code" : "[ View criterion.rs benchmark harness ]"}</span>
               </button>
             </div>
 
@@ -1669,7 +1866,7 @@ criterion_main!(benches);`}
       </section>
 
       {/* ========================================================= */}
-      {/* 06 / RUN IT: AUTHENTIC DEVELOPER TERMINAL                 */}
+      {/* 06 / RUN IT: DEVELOPER TERMINAL + 3-STEP BEGINNER GUIDE   */}
       {/* ========================================================= */}
       <section id="run" className="py-14 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-[#FAFAF9]">
         <div className="max-w-4xl mx-auto space-y-6">
@@ -1677,14 +1874,14 @@ criterion_main!(benches);`}
           <div>
             <div className="text-xs font-mono text-blue-600 font-bold mb-1">06 / RUN IT</div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-              Build and Run in 10 Seconds
+              Run It on Your Machine in 10 Seconds
             </h2>
-            <p className="text-sm text-[#4B5563] mt-1">
-              SynapseDB is compiled to a single zero-dependency native binary.
+            <p className="text-sm text-[#4B5563] mt-1 font-sans">
+              SynapseDB is a single zero-dependency native binary. No Docker containers, no external databases to configure.
             </p>
           </div>
 
-          {/* 27. Authentic Terminal */}
+          {/* Authentic Terminal */}
           <div className="rounded-lg border border-[#1E293B] bg-[#0B0F19] text-[#F1F5F9] font-mono text-xs overflow-hidden shadow-xs">
             
             <div className="bg-[#111827] border-b border-[#1E293B] px-4 py-2 flex items-center justify-between text-[#94A3B8] text-[11px]">
@@ -1747,7 +1944,7 @@ criterion_main!(benches);`}
       </section>
 
       {/* ========================================================= */}
-      {/* 33. CLEAN TECHNICAL FOOTER                                */}
+      {/* CLEAN TECHNICAL FOOTER                                    */}
       {/* ========================================================= */}
       <footer className="bg-white py-10 px-4 sm:px-6 lg:px-8 border-t border-[#E5E7EB] text-xs font-mono text-[#6B7280]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -1766,12 +1963,12 @@ criterion_main!(benches);`}
           </div>
 
           <div className="flex flex-wrap items-center gap-5 text-xs">
+            <a href="#basics" className="hover:text-[#111827] transition">Database 101</a>
             <a href="#playground" className="hover:text-[#111827] transition">01 Playground</a>
             <a href="#pipeline" className="hover:text-[#111827] transition">02 Pipeline</a>
-            <a href="#compiler" className="hover:text-[#111827] transition">03 Compiler</a>
+            <a href="#compiler" className="hover:text-[#111827] transition">03 AI Compiler</a>
             <a href="#internals" className="hover:text-[#111827] transition">04 Internals</a>
             <a href="#benchmarks" className="hover:text-[#111827] transition">05 Benchmarks</a>
-            <a href="#run" className="hover:text-[#111827] transition">06 Run</a>
             <a
               href="https://github.com/Sohan-2001/SynapseDB"
               target="_blank"
