@@ -32,7 +32,9 @@ import {
   BarChart3,
   Layers3,
   Boxes,
-  Compass
+  Compass,
+  Menu,
+  X
 } from "lucide-react";
 import { executeQuery, pushPayload, flushBuffers, QueryResponse } from "@/lib/api";
 
@@ -53,6 +55,7 @@ export default function LandingPage({
   // DUAL-LAYER EXPLANATION MODE: "Plain English" vs "Under the Hood"
   // -------------------------------------------------------------
   const [explainMode, setExplainMode] = useState<"simple" | "tech">("simple");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   // -------------------------------------------------------------
   // HERO LIVE QUERY STATE
@@ -491,75 +494,75 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
       {/* ========================================================= */}
       {/* LIVE SYSTEM STATUS BAR (ENGINE CONSOLE FEEL)              */}
       {/* ========================================================= */}
-      <div className="w-full bg-[#0B0F19] text-[#94A3B8] border-b border-[#1E293B] px-4 py-1.5 text-[11px] font-mono flex items-center justify-between overflow-x-auto">
-        <div className="flex items-center gap-4 shrink-0">
+      <div className="w-full bg-[#0B0F19] text-[#94A3B8] border-b border-[#1E293B] px-3 sm:px-4 py-1.5 text-[11px] font-mono flex items-center justify-between overflow-x-auto">
+        <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
           <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>ENGINE ONLINE</span>
           </div>
           <span className="text-[#475569]">·</span>
-          <span>v0.9.4</span>
-          <span className="text-[#475569]">·</span>
-          <span>Rust 2021 (x86_64-simd)</span>
-          <span className="text-[#475569]">·</span>
-          <span>WAL: strict fsync</span>
-          <span className="text-[#475569]">·</span>
-          <span>interactive playground ready</span>
+          <span className="hidden sm:inline">v0.9.4</span>
+          <span className="hidden sm:inline text-[#475569]">·</span>
+          <span>Rust 2021 (SIMD)</span>
+          <span className="hidden md:inline text-[#475569]">·</span>
+          <span className="hidden md:inline">WAL: strict fsync</span>
+          <span className="hidden lg:inline text-[#475569]">·</span>
+          <span className="hidden lg:inline">interactive playground ready</span>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 text-[#64748B]">
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 text-[#64748B]">
           <span>latency: {pingLatency !== null ? `${pingLatency} ms` : "4.2 µs"}</span>
-          <span className="text-[#475569]">·</span>
-          <span className="text-emerald-400/90">{connected ? "cloud synchronized" : "offline simulation ready"}</span>
+          <span className="hidden sm:inline text-[#475569]">·</span>
+          <span className="hidden sm:inline text-emerald-400/90">{connected ? "cloud synchronized" : "offline simulation ready"}</span>
         </div>
       </div>
 
       {/* ========================================================= */}
       {/* MINIMAL DEVELOPER NAVBAR                                  */}
       {/* ========================================================= */}
-      <header className="sticky top-0 z-40 bg-[#FAFAF9]/95 backdrop-blur-md border-b border-[#E5E7EB] px-4 sm:px-6 py-2.5">
+      <header className="sticky top-0 z-40 bg-[#FAFAF9]/95 backdrop-blur-md border-b border-[#E5E7EB] px-3 sm:px-6 py-2">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Logo & Version */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <span className="text-blue-600 font-bold text-lg leading-none">⚡</span>
             <a href="#" className="font-extrabold text-base tracking-tight text-[#111827] hover:text-blue-600 transition font-mono">
               SynapseDB
             </a>
-            <span className="text-[11px] font-mono font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+            <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
               0.9
             </span>
           </div>
 
-          {/* Section Jump Links */}
-          <nav className="hidden md:flex items-center gap-5 text-xs font-mono text-[#4B5563]">
+          {/* Section Jump Links (Desktop) */}
+          <nav className="hidden md:flex items-center gap-4 lg:gap-5 text-xs font-mono text-[#4B5563]">
             <a href="#basics" className="hover:text-[#111827] transition font-semibold text-blue-600">
               Database 101
             </a>
             <a href="#playground" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">01</span>Playground
+              <span className="text-slate-400 mr-0.5">01</span>Playground
             </a>
             <a href="#pipeline" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">02</span>How It Works
+              <span className="text-slate-400 mr-0.5">02</span>How It Works
             </a>
             <a href="#compiler" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">03</span>AI Compiler
+              <span className="text-slate-400 mr-0.5">03</span>AI Compiler
             </a>
             <a href="#internals" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">04</span>Internals
+              <span className="text-slate-400 mr-0.5">04</span>Internals
             </a>
             <a href="#benchmarks" className="hover:text-[#111827] transition">
-              <span className="text-slate-400 mr-1">05</span>Benchmarks
+              <span className="text-slate-400 mr-0.5">05</span>Benchmarks
             </a>
           </nav>
 
-          {/* Direct Technical Actions */}
-          <div className="flex items-center gap-2.5">
+          {/* Direct Technical Actions & Mobile Hamburger */}
+          <div className="flex items-center gap-2">
             <a
               href="https://github.com/Sohan-2001/SynapseDB"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-mono px-3 py-1.5 rounded-md border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#374151] transition flex items-center gap-1.5"
+              className="hidden sm:flex text-[11px] font-mono px-2.5 py-1.5 rounded-md border border-[#E5E7EB] bg-white hover:bg-slate-50 text-[#374151] transition items-center gap-1.5"
             >
               <span>GitHub</span>
               <ExternalLink className="w-3 h-3 text-slate-400" />
@@ -567,32 +570,113 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
             <a
               href="#playground"
-              className="text-xs font-mono px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition flex items-center gap-1.5 shadow-xs"
+              className="text-[11px] font-mono px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium transition flex items-center gap-1.5 shadow-2xs"
             >
               <span>[ Run Playground ]</span>
             </a>
+
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              onClick={() => setMobileNavOpen(!mobileNavOpen)}
+              className="md:hidden p-1.5 rounded-md border border-slate-200 text-slate-700 hover:bg-slate-100 transition focus:outline-hidden"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileNavOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+            </button>
           </div>
 
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileNavOpen && (
+          <div className="md:hidden mt-2 pt-2 border-t border-slate-200 flex flex-col gap-1 font-mono text-xs animate-in fade-in slide-in-from-top-2 duration-150">
+            <a
+              href="#basics"
+              onClick={() => setMobileNavOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-blue-50 text-blue-600 font-semibold flex items-center justify-between"
+            >
+              <span>Database 101 (Visual Guide)</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </a>
+            <a
+              href="#playground"
+              onClick={() => setMobileNavOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700 flex items-center justify-between"
+            >
+              <span>01. Interactive Playground</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            </a>
+            <a
+              href="#pipeline"
+              onClick={() => setMobileNavOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700 flex items-center justify-between"
+            >
+              <span>02. How It Works (Pipeline)</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            </a>
+            <a
+              href="#compiler"
+              onClick={() => setMobileNavOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700 flex items-center justify-between"
+            >
+              <span>03. AI Query Compiler</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            </a>
+            <a
+              href="#internals"
+              onClick={() => setMobileNavOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700 flex items-center justify-between"
+            >
+              <span>04. Storage & SIMD Internals</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            </a>
+            <a
+              href="#benchmarks"
+              onClick={() => setMobileNavOpen(false)}
+              className="px-3 py-2 rounded-md hover:bg-slate-100 text-slate-700 flex items-center justify-between"
+            >
+              <span>05. Engine Benchmarks</span>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            </a>
+            <div className="pt-2 mt-1 border-t border-slate-200 flex items-center gap-2">
+              <a
+                href="https://github.com/Sohan-2001/SynapseDB"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 text-center py-2 rounded-md border border-slate-200 bg-white text-slate-700 font-medium flex items-center justify-center gap-1"
+              >
+                <span>GitHub</span>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+              <a
+                href="#playground"
+                onClick={() => setMobileNavOpen(false)}
+                className="flex-1 text-center py-2 rounded-md bg-blue-600 text-white font-medium shadow-2xs"
+              >
+                Run Playground
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ========================================================= */}
       {/* HERO SECTION: DUAL-LAYER EXPLANATION + LIVE CONSOLE       */}
       {/* ========================================================= */}
-      <section className="py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-white">
+      <section className="py-10 md:py-16 px-4 sm:px-6 lg:px-8 border-b border-[#E5E7EB] bg-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           
           {/* LEFT SIDE: Intuitive or Technical Statement */}
           <div className="lg:col-span-6 flex flex-col text-left">
             
             {/* Visual Mode Selector: Plain English vs Under the Hood */}
-            <div className="inline-flex p-0.5 rounded-md bg-[#F3F4F6] border border-[#E5E7EB] text-xs font-mono mb-4 self-start">
+            <div className="inline-flex p-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-mono mb-5 self-start shadow-2xs">
               <button
                 onClick={() => setExplainMode("simple")}
-                className={`px-3 py-1 rounded transition flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-full transition flex items-center gap-1.5 ${
                   explainMode === "simple"
-                    ? "bg-white text-blue-700 font-bold shadow-2xs border border-[#E5E7EB]"
-                    : "text-[#6B7280] hover:text-[#111827]"
+                    ? "bg-white text-blue-700 font-bold shadow-xs border border-slate-200/80"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
@@ -600,13 +684,13 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
               </button>
               <button
                 onClick={() => setExplainMode("tech")}
-                className={`px-3 py-1 rounded transition flex items-center gap-1.5 ${
+                className={`px-3.5 py-1.5 rounded-full transition flex items-center gap-1.5 ${
                   explainMode === "tech"
-                    ? "bg-white text-[#111827] font-bold shadow-2xs border border-[#E5E7EB]"
-                    : "text-[#6B7280] hover:text-[#111827]"
+                    ? "bg-slate-900 text-white font-bold shadow-xs"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                <Terminal className="w-3.5 h-3.5 text-blue-600" />
+                <Terminal className="w-3.5 h-3.5 text-blue-400" />
                 <span>Under the Hood</span>
               </button>
             </div>
@@ -617,32 +701,51 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
 
             {explainMode === "simple" ? (
               <>
-                <p className="mt-3 text-xl sm:text-2xl font-bold text-blue-600 tracking-tight">
-                  An AI database that self-organizes your data and answers questions instantly.
+                <h2 className="mt-3 text-2xl sm:text-3xl font-extrabold text-blue-600 tracking-tight leading-tight">
+                  The smart database that speaks human.
+                </h2>
+
+                <p className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed max-w-lg">
+                  Drop in your data without writing schemas, ask questions in normal everyday English, and get instant answers in microseconds.
                 </p>
 
-                <p className="mt-4 text-base text-[#4B5563] leading-relaxed max-w-xl">
-                  Most databases make you create rigid blueprints (schemas) before saving anything, and require complex SQL scripts to search. <strong>SynapseDB lets you dump any raw JSON data</strong>, organizes it into vertical columns automatically, and lets you ask questions in plain English—calculating answers in millionths of a second.
-                </p>
+                {/* Sleek roundish pills */}
+                <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium text-slate-700 max-w-lg">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Zero table blueprints needed
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    Plain English query compiler
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                    <span className="w-2 h-2 rounded-full bg-purple-500" />
+                    Runs 100% locally on your laptop
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-800 border border-slate-200">
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    $0 cloud AI bill forever
+                  </span>
+                </div>
 
-                {/* Friendly Concept Badges */}
-                <div className="mt-6 grid grid-cols-2 gap-2 text-xs font-medium text-[#374151] max-w-xl">
-                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>No table blueprints needed</span>
-                  </div>
-                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>Ask queries in plain English</span>
-                  </div>
-                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>Runs 100% on your laptop</span>
-                  </div>
-                  <div className="p-2 rounded bg-slate-50 border border-slate-200 flex items-center gap-2">
-                    <span className="text-emerald-600 font-bold">✓</span>
-                    <span>$0.00 cloud AI bill</span>
-                  </div>
+                {/* Roundish Action Buttons */}
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <a
+                    href="#playground"
+                    className="px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm transition flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <span>Try Interactive Demo</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+
+                  <a
+                    href="#basics"
+                    className="px-5 py-2.5 rounded-full border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-medium text-xs sm:text-sm transition flex items-center gap-2 shadow-2xs hover:shadow-xs hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <span>Visual Guide: Database 101</span>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </a>
                 </div>
               </>
             ) : (
@@ -669,27 +772,27 @@ pub unsafe fn scan_sum_avx2(slice: &[f64]) -> f64 {
                   <span>·</span>
                   <span>MIT License</span>
                 </div>
+
+                {/* Primary Actions */}
+                <div className="mt-7 flex flex-wrap items-center gap-3">
+                  <a
+                    href="#playground"
+                    className="px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-semibold transition flex items-center gap-2 shadow-xs"
+                  >
+                    <span>[ Run Interactive Demo ]</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+
+                  <a
+                    href="#basics"
+                    className="px-5 py-2.5 rounded-md border border-[#D1D5DB] bg-white hover:bg-slate-50 text-[#111827] font-mono text-xs font-semibold transition flex items-center gap-2"
+                  >
+                    <span>Database 101: How It Works</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  </a>
+                </div>
               </>
             )}
-
-            {/* Primary Actions */}
-            <div className="mt-7 flex flex-wrap items-center gap-3">
-              <a
-                href="#playground"
-                className="px-5 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-semibold transition flex items-center gap-2 shadow-xs"
-              >
-                <span>[ Run Interactive Demo ]</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </a>
-
-              <a
-                href="#basics"
-                className="px-5 py-2.5 rounded-md border border-[#D1D5DB] bg-white hover:bg-slate-50 text-[#111827] font-mono text-xs font-semibold transition flex items-center gap-2"
-              >
-                <span>Database 101: How It Works</span>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              </a>
-            </div>
 
           </div>
 
