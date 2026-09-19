@@ -1,21 +1,18 @@
-# -------------------------------------------------------------
-# Stage 1: Build binary with Rust compiler
+﻿# -------------------------------------------------------------
+# Stage 1: Build Rust binary
 # -------------------------------------------------------------
 FROM rust:1.80-bullseye AS builder
 
 WORKDIR /usr/src/synapsedb
-
-# Copy Cargo configuration and source crates
 COPY Cargo.toml Cargo.lock* ./
 COPY crates ./crates
 
-# Build high-performance release binary
 RUN cargo build --release --bin synapsedb
 
 # -------------------------------------------------------------
-# Stage 2: Ultra-lightweight Debian runtime image
+# Stage 2: Runtime image with Python REST Gateway
 # -------------------------------------------------------------
-FROM debian:bullseye-slim
+FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -27,16 +24,16 @@ WORKDIR /app
 # Copy binary from builder
 COPY --from=builder /usr/src/synapsedb/target/release/synapsedb /usr/local/bin/synapsedb
 
-# Environment configuration
-ENV SYNAPSE_ADDR="0.0.0.0:8765"
+# Copy gateway and entrypoint
+COPY gateway.py entrypoint.sh ./
+RUN chmod +x /usr/local/bin/synapsedb /app/entrypoint.sh
+
+# Port configuration (defaults to 7860, respects $PORT from cloud providers like Render)
+ENV PORT=7860
+ENV SYNAPSE_ADDR="127.0.0.1:8765"
 ENV SYNAPSE_DATA_DIR="/data"
-ENV RUST_LOG="info"
 
-# Data persistence for WAL and columnar segment files
-VOLUME ["/data"]
-
-# Expose TCP wire protocol port
+EXPOSE 7860
 EXPOSE 8765
 
-# Start database engine
-ENTRYPOINT ["/usr/local/bin/synapsedb"]
+CMD ["/app/entrypoint.sh"]
