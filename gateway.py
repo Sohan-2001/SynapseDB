@@ -3,6 +3,8 @@ import json
 import time
 import socket
 import re
+import hashlib
+import secrets
 from collections import defaultdict
 from threading import Lock
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -40,15 +42,12 @@ class SlidingWindowRateLimiter:
     def is_allowed(self, ip: str) -> tuple[bool, int, int]:
         now = time.time()
         with self.lock:
-            # Periodic cleanup of expired IPs (every 5 minutes)
             if now - self.last_cleanup > 300:
                 self._cleanup(now)
                 self.last_cleanup = now
 
             window_start = now - self.window_seconds
             timestamps = self.requests[ip]
-            
-            # Prune timestamps older than window
             self.requests[ip] = [t for t in timestamps if t > window_start]
             current_count = len(self.requests[ip])
 
@@ -68,6 +67,89 @@ class SlidingWindowRateLimiter:
             del self.requests[ip]
 
 limiter = SlidingWindowRateLimiter(RATE_LIMIT_MAX, RATE_LIMIT_WINDOW)
+auth_limiter = SlidingWindowRateLimiter(15, 60)  # Brute-force guard: max 15 attempts / min
+
+# -------------------------------------------------------------
+# User Store & Authentication System
+# -------------------------------------------------------------
+DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+USERS_FILE = os.path.join(DATA_DIR, "users.json")
+users_lock = Lock()
+
+def _ensure_data_dir():
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        if not os.path.exists(USERS_FILE):
+            with open(USERS_FILE, "w", encoding="utf-8") as f:
+                json.dump({}, f)
+    except Exception as e:
+        print(f"[AUTH WARN] Could not init users dir: {e}")
+
+_ensure_data_dir()
+
+def load_users() -> dict:
+    with users_lock:
+        try:
+            if os.path.exists(USERS_FILE):
+                with open(USERS_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception:
+            pass
+        return {}
+
+def save_users(users: dict):
+    with users_lock:
+        try:
+            os.makedirs(DATA_DIR, exist_ok=True)
+            with open(USERS_FILE, "w", encoding="utf-8") as f:
+                json.dump(users, f, indent=2)
+        except Exception as e:
+            print(f"[AUTH ERROR] Failed to save users: {e}")
+
+def hash_password(password: str, salt_hex: str) -> str:
+    salt_bytes = bytes.fromhex(salt_hex)
+    pwd_bytes = password.encode("utf-8")
+    return hashlib.pbkdf2_hmac("sha256", pwd_bytes, salt_bytes, 100000).hex()
+
+# Thread-safe in-memory session store (token -> {user_id, name, email, created_at, expires_at})
+sessions_lock = Lock()
+active_sessions: dict[str, dict] = {}
+SESSION_TTL_SECONDS = 7 * 24 * 3600  # 7 days
+
+def create_session(user_id: str, name: str, email: str) -> str:
+    token = "syn_" + secrets.token_hex(24)
+    now = time.time()
+    with sessions_lock:
+        active_sessions[token] = {
+            "user_id": user_id,
+            "name": name,
+            "email": email,
+            "created_at": now,
+            "expires_at": now + SESSION_TTL_SECONDS
+        }
+    return token
+
+def get_session_user(token: str) -> dict | None:
+    if not token:
+        return None
+    now = time.time()
+    with sessions_lock:
+        sess = active_sessions.get(token)
+        if not sess:
+            return None
+        if sess["expires_at"] < now:
+            del active_sessions[token]
+            return None
+        return {
+            "id": sess["user_id"],
+            "name": sess["name"],
+            "email": sess["email"]
+        }
+
+def revoke_session(token: str):
+    with sessions_lock:
+        if token in active_sessions:
+            del active_sessions[token]
 
 # -------------------------------------------------------------
 # TCP Wire Protocol Client with Timeout Guards
@@ -95,29 +177,23 @@ def execute_tcp(cmd: str, timeout: float = 5.0) -> str:
     return data.decode("utf-8", errors="ignore")
 
 # -------------------------------------------------------------
-# HTTP Request Handler with Security Hardening
+# HTTP Request Handler with Security & Authentication
 # -------------------------------------------------------------
 class SynapseGatewayHandler(BaseHTTPRequestHandler):
     def get_client_ip(self) -> str:
-        # Check X-Forwarded-For if behind Heroku reverse proxy
         forwarded = self.headers.get("X-Forwarded-For")
         if forwarded:
             return forwarded.split(",")[0].strip()
         return self.client_address[0]
 
     def _send_security_headers(self, remaining: int = 60, retry_after: int = 0):
-        # CORS
         self.send_header("Access-Control-Allow-Origin", CORS_ALLOW_ORIGIN)
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-API-Key")
-        
-        # Hardened Security Headers
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         self.send_header("X-XSS-Protection", "1; mode=block")
-        
-        # Rate Limit Headers
         self.send_header("X-RateLimit-Limit", str(RATE_LIMIT_MAX))
         self.send_header("X-RateLimit-Remaining", str(max(0, remaining)))
         if retry_after > 0:
@@ -176,8 +252,27 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                     "rate_limit_limit": RATE_LIMIT_MAX,
                     "max_payload_bytes": MAX_PAYLOAD_BYTES
                 })
-            except Exception as e:
+            except Exception:
                 self._respond_json(503, {"status": "error", "error": "Database engine unavailable"})
+
+        elif path == "/auth/me":
+            auth_header = self.headers.get("Authorization", "").strip()
+            token = ""
+            if auth_header.startswith("Bearer "):
+                token = auth_header[7:].strip()
+            
+            user = get_session_user(token)
+            if not user:
+                self._respond_json(401, {
+                    "status": "error",
+                    "error": "Unauthorized. Invalid or expired session token."
+                })
+                return
+            
+            self._respond_json(200, {
+                "status": "success",
+                "user": user
+            })
 
         elif path == "/info":
             try:
@@ -218,7 +313,6 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
 
         path = self.path.rstrip("/")
 
-        # Enforce 100 KB payload size limit
         try:
             content_length = int(self.headers.get("Content-Length", 0))
         except ValueError:
@@ -232,16 +326,14 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                     "status": "error",
                     "code": 413,
                     "error": "Payload Too Large",
-                    "message": f"Payload size ({content_length} bytes) exceeds maximum limit of {MAX_PAYLOAD_BYTES} bytes (100 KB).",
-                    "max_allowed_bytes": MAX_PAYLOAD_BYTES,
+                    "message": f"Payload size ({content_length} bytes) exceeds limit of {MAX_PAYLOAD_BYTES} bytes.",
                 }
             )
             return
 
-        # Safe read capped at MAX_PAYLOAD_BYTES + 1
         raw_body = self.rfile.read(min(content_length, MAX_PAYLOAD_BYTES + 1)).decode("utf-8", errors="ignore")
         if len(raw_body.encode("utf-8")) > MAX_PAYLOAD_BYTES:
-            self._respond_json(413, {"error": "Payload Too Large", "message": "Exceeded 100 KB limit"})
+            self._respond_json(413, {"error": "Payload Too Large"})
             return
 
         try:
@@ -250,13 +342,145 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
             self._respond_json(400, {"error": "Malformed JSON in request body"})
             return
 
-        if path == "/query":
+        # ---------------------------------------------------------
+        # AUTHENTICATION ROUTES
+        # ---------------------------------------------------------
+        if path == "/auth/register":
+            name = str(payload.get("name", "")).strip()
+            email = str(payload.get("email", "")).strip().lower()
+            password = str(payload.get("password", ""))
+
+            if not name:
+                self._respond_json(400, {"status": "error", "error": "Name is required"})
+                return
+            if not email or "@" not in email or "." not in email:
+                self._respond_json(400, {"status": "error", "error": "A valid email address is required"})
+                return
+            if not password or len(password) < 6:
+                self._respond_json(400, {"status": "error", "error": "Password must be at least 6 characters long"})
+                return
+
+            users = load_users()
+            if email in users:
+                self._respond_json(409, {"status": "error", "error": "An account with this email already exists"})
+                return
+
+            user_id = "usr_" + secrets.token_hex(6)
+            salt = secrets.token_hex(16)
+            pw_hash = hash_password(password, salt)
+            now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+            user_record = {
+                "id": user_id,
+                "name": name,
+                "email": email,
+                "salt": salt,
+                "password_hash": pw_hash,
+                "created_at": now_iso
+            }
+            users[email] = user_record
+            save_users(users)
+
+            try:
+                execute_tcp(f"PUSH _users {json.dumps({'user_id': user_id, 'email': email, 'name': name})}", timeout=1.0)
+            except Exception:
+                pass
+
+            token = create_session(user_id, name, email)
+            self._respond_json(201, {
+                "status": "success",
+                "user": {
+                    "id": user_id,
+                    "name": name,
+                    "email": email,
+                    "created_at": now_iso
+                },
+                "token": token
+            })
+
+        elif path == "/auth/login":
+            ip = self.get_client_ip()
+            allowed, _, retry_after = auth_limiter.is_allowed(ip)
+            if not allowed:
+                self._respond_json(429, {
+                    "status": "error",
+                    "error": f"Too many login attempts. Please wait {retry_after} seconds.",
+                    "retry_after": retry_after
+                }, retry_after=retry_after)
+                return
+
+            email = str(payload.get("email", "")).strip().lower()
+            password = str(payload.get("password", ""))
+
+            if not email or not password:
+                self._respond_json(400, {"status": "error", "error": "Email and password are required"})
+                return
+
+            users = load_users()
+            user_record = users.get(email)
+            if not user_record:
+                self._respond_json(401, {"status": "error", "error": "No account found with this email"})
+                return
+
+            salt = user_record.get("salt", "")
+            expected_hash = user_record.get("password_hash", "")
+            computed_hash = hash_password(password, salt)
+
+            if computed_hash != expected_hash:
+                self._respond_json(401, {"status": "error", "error": "Incorrect password"})
+                return
+
+            user_id = user_record.get("id", "usr_unknown")
+            name = user_record.get("name", "User")
+            token = create_session(user_id, name, email)
+
+            self._respond_json(200, {
+                "status": "success",
+                "user": {
+                    "id": user_id,
+                    "name": name,
+                    "email": email,
+                    "created_at": user_record.get("created_at", "")
+                },
+                "token": token
+            })
+
+        elif path == "/auth/logout":
+            auth_header = self.headers.get("Authorization", "").strip()
+            token = ""
+            if auth_header.startswith("Bearer "):
+                token = auth_header[7:].strip()
+            if token:
+                revoke_session(token)
+            self._respond_json(200, {"status": "success", "message": "Signed out successfully"})
+
+        elif path == "/auth/demo":
+            guest_id = "guest_" + secrets.token_hex(4)
+            guest_name = "Guest Explorer"
+            guest_email = f"{guest_id}@synapsedb.demo"
+            now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+            token = create_session(guest_id, guest_name, guest_email)
+            self._respond_json(200, {
+                "status": "success",
+                "user": {
+                    "id": guest_id,
+                    "name": guest_name,
+                    "email": guest_email,
+                    "created_at": now_iso
+                },
+                "token": token
+            })
+
+        # ---------------------------------------------------------
+        # DATABASE ENGINE ROUTES
+        # ---------------------------------------------------------
+        elif path == "/query":
             query_str = payload.get("query", "").strip()
             if not query_str:
                 self._respond_json(400, {"error": "Missing 'query' parameter"})
                 return
             if len(query_str) > 4096:
-                self._respond_json(400, {"error": "Query string too long (maximum 4096 characters)"})
+                self._respond_json(400, {"error": "Query string too long (max 4096 chars)"})
                 return
 
             try:
@@ -276,7 +500,7 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
             item = payload.get("payload", "").strip()
 
             if not TABLE_NAME_REGEX.match(table):
-                self._respond_json(400, {"error": "Invalid table name. Only alphanumeric, underscores, and dashes allowed (max 64 chars)"})
+                self._respond_json(400, {"error": "Invalid table name format"})
                 return
 
             if not item:
@@ -318,9 +542,9 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "7860"))
-    print(f"[SECURITY] SynapseDB Hardened Gateway listening on http://0.0.0.0:{port}")
-    print(f"   - Rate Limit: {RATE_LIMIT_MAX} req/min")
+    print(f"[SECURITY] SynapseDB Hardened Gateway with Backend Auth listening on http://0.0.0.0:{port}")
+    print(f"   - Rate Limit: {RATE_LIMIT_MAX} req/min (Auth: 15 req/min)")
     print(f"   - Max Payload: {MAX_PAYLOAD_BYTES / 1024:.1f} KB")
-    print(f"   - Auth Protected: {'Yes' if SYNAPSE_API_KEY else 'No (Public Demo Mode)'}")
+    print(f"   - Endpoints: /health, /query, /push, /schema, /auth/register, /auth/login, /auth/me, /auth/demo")
     server = HTTPServer(("0.0.0.0", port), SynapseGatewayHandler)
     server.serve_forever()

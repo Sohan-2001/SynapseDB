@@ -39,3 +39,7 @@ scratch/
 Thumbs.db
 [Dd]esktop.ini
 *.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc

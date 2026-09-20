@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import LandingPage from "@/components/LandingPage";
 import AuthModal from "@/components/AuthModal";
-import { getCurrentUser, signOut, User } from "@/lib/auth";
+import { getCachedUser, verifySession, signOut, User } from "@/lib/auth";
 import {
   getApiBaseUrl,
   setCustomApiUrl,
@@ -100,9 +100,14 @@ export default function SynapsePlayground() {
   }
 
   useEffect(() => {
-    setCurrentUser(getCurrentUser());
     const savedUrl = getApiBaseUrl();
     setApiUrl(savedUrl);
+    const cached = getCachedUser();
+    if (cached) setCurrentUser(cached);
+    verifySession(savedUrl).then((verified) => {
+      if (verified) setCurrentUser(verified);
+      else if (cached) setCurrentUser(null);
+    });
     checkHealth(savedUrl);
     const interval = setInterval(() => checkHealth(savedUrl), 8000);
     return () => clearInterval(interval);
@@ -137,7 +142,7 @@ export default function SynapsePlayground() {
   }
 
   function handleSignOut() {
-    signOut();
+    signOut(apiUrl);
     setCurrentUser(null);
     setCurrentView("landing");
     setMobileMenuOpen(false);
@@ -576,15 +581,7 @@ export default function SynapsePlayground() {
         <AuthModal
           isOpen={authModalOpen}
           onClose={() => setAuthModalOpen(false)}
-          initialTab={authModalTab}
-          onAuthSuccess={handleAuthSuccess}
-          promptMessage={authPrompt}
-        />
-
-        {/* Auth Modal */}
-        <AuthModal
-          isOpen={authModalOpen}
-          onClose={() => setAuthModalOpen(false)}
+          apiUrl={apiUrl}
           initialTab={authModalTab}
           onAuthSuccess={handleAuthSuccess}
           promptMessage={authPrompt}
