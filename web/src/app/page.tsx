@@ -368,7 +368,7 @@ export default function SynapsePlayground() {
     return (
       <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
         {/* Landing Top Navbar */}
-        <header className="border-b border-slate-200 bg-white/95 backdrop-blur px-4 sm:px-6 py-3 sticky top-0 z-40 shadow-2xs">
+        <header className="border-b border-slate-200/80 bg-white/85 backdrop-blur-xl px-4 sm:px-6 safe-px py-3 sticky top-0 z-40 shadow-2xs">
           <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
             
             {/* Logo */}
@@ -384,7 +384,7 @@ export default function SynapsePlayground() {
               </button>
 
               {/* Status Indicator */}
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs">
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full glass-pill text-xs">
                 <div className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
                 <span className="text-slate-600 font-medium">{connected ? "Cloud Engine Online" : "Connecting..."}</span>
                 {pingLatency !== null && <span className="text-slate-400 text-[11px]">({pingLatency} ms)</span>}
@@ -395,19 +395,19 @@ export default function SynapsePlayground() {
             <nav className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-600">
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100/80 transition"
               >
                 Overview
               </button>
               <a
                 href="#demo-sandbox"
-                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100/80 transition"
               >
                 Live Demo
               </a>
               <button
                 onClick={() => handleOpenStudio("query")}
-                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100/80 transition"
               >
                 Playground Studio
               </button>
@@ -415,7 +415,7 @@ export default function SynapsePlayground() {
                 href="https://github.com/Sohan-2001/SynapseDB"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100/80 transition flex items-center gap-1"
               >
                 <span>GitHub</span>
                 <ExternalLink className="w-3 h-3 text-slate-400" />
@@ -434,7 +434,7 @@ export default function SynapsePlayground() {
                   </div>
                   <button
                     onClick={() => handleOpenStudio("query")}
-                    className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5"
+                    className="min-h-[38px] px-4 py-1.5 rounded-xl btn-glass-primary text-xs font-semibold flex items-center gap-1.5"
                   >
                     <span>Open Studio</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -442,7 +442,7 @@ export default function SynapsePlayground() {
                   <button
                     onClick={handleSignOut}
                     title="Sign Out"
-                    className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 border border-slate-200 transition"
+                    className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl btn-glass-secondary text-slate-600 transition"
                   >
                     <LogOut className="w-3.5 h-3.5" />
                   </button>
@@ -455,7 +455,7 @@ export default function SynapsePlayground() {
                       setAuthModalTab("signin");
                       setAuthModalOpen(true);
                     }}
-                    className="min-h-[38px] px-3 py-1.5 rounded-xl text-slate-700 hover:text-slate-950 hover:bg-slate-100 text-xs font-semibold transition"
+                    className="min-h-[38px] px-3.5 py-1.5 rounded-xl btn-glass-secondary text-xs font-semibold transition"
                   >
                     Sign In
                   </button>
@@ -465,7 +465,7 @@ export default function SynapsePlayground() {
                       setAuthModalTab("signup");
                       setAuthModalOpen(true);
                     }}
-                    className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+                    className="min-h-[38px] px-4 py-1.5 rounded-xl btn-glass-primary text-xs font-semibold transition"
                   >
                     Create Account
                   </button>
@@ -475,7 +475,7 @@ export default function SynapsePlayground() {
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+                className="md:hidden min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl btn-glass-secondary text-slate-700 transition"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -506,26 +506,26 @@ export default function SynapsePlayground() {
                   setMobileMenuOpen(false);
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
-                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800"
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-100/80 text-slate-800 transition"
               >
                 Overview
               </button>
               <button
                 onClick={() => handleOpenStudio("query")}
-                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 flex items-center justify-between"
+                className="w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold btn-glass-primary flex items-center justify-between"
               >
                 <span>Launch Playground Studio</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleOpenStudio("browser")}
-                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800"
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-100/80 text-slate-800 transition"
               >
                 Data Browser
               </button>
               <button
                 onClick={() => handleOpenStudio("ingest")}
-                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800"
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-100/80 text-slate-800 transition"
               >
                 Ingestion Lab
               </button>
@@ -533,14 +533,14 @@ export default function SynapsePlayground() {
                 href="https://github.com/Sohan-2001/SynapseDB"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800 flex items-center justify-between"
+                className="w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-slate-100/80 text-slate-800 flex items-center justify-between transition"
               >
                 <span>GitHub Repository</span>
                 <ExternalLink className="w-4 h-4 text-slate-400" />
               </a>
 
               {!currentUser && (
-                <div className="pt-2 border-t border-slate-200 flex flex-col gap-2">
+                <div className="pt-2 border-t border-slate-200/80 flex flex-col gap-2">
                   <button
                     onClick={() => {
                       setMobileMenuOpen(false);
@@ -548,7 +548,7 @@ export default function SynapsePlayground() {
                       setAuthModalTab("signin");
                       setAuthModalOpen(true);
                     }}
-                    className="w-full py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 text-center hover:bg-slate-100"
+                    className="w-full py-2.5 rounded-xl btn-glass-secondary text-sm font-semibold text-center"
                   >
                     Sign In
                   </button>
@@ -559,7 +559,7 @@ export default function SynapsePlayground() {
                       setAuthModalTab("signup");
                       setAuthModalOpen(true);
                     }}
-                    className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold text-center hover:bg-blue-700"
+                    className="w-full py-2.5 rounded-xl btn-glass-primary text-sm font-semibold text-center"
                   >
                     Create Free Account
                   </button>
@@ -612,7 +612,7 @@ export default function SynapsePlayground() {
   return (
     <div className="min-h-screen bg-[#FAFAF9] text-[#111827] flex flex-col font-sans">
       {/* Studio Header */}
-      <header className="border-b border-[#E5E7EB] bg-white px-4 sm:px-6 py-2.5 sticky top-0 z-50">
+      <header className="border-b border-[#E5E7EB] bg-white/90 backdrop-blur-xl px-4 sm:px-6 safe-px py-2.5 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 font-mono text-xs">
           <div className="flex items-center gap-3">
             <button
@@ -624,13 +624,13 @@ export default function SynapsePlayground() {
             >
               <span className="text-blue-600">⚡</span>
               <span>SynapseDB</span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
                 Studio Console
               </span>
             </button>
             <div
               onClick={() => setShowConfig(!showConfig)}
-              className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#FAFAF9] border border-[#E5E7EB] text-[#6B7280] cursor-pointer hover:border-slate-400 transition"
+              className="flex items-center gap-2 px-2.5 py-1 rounded-full glass-pill text-[#6B7280] cursor-pointer hover:border-slate-400 transition"
             >
               <div className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
               <span>{connected ? "online" : "connecting"}</span>
@@ -641,7 +641,7 @@ export default function SynapsePlayground() {
 
           <div className="flex items-center gap-2.5">
             {currentUser && (
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold">
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span className="max-w-[100px] truncate">{currentUser.name}</span>
               </div>
@@ -649,7 +649,7 @@ export default function SynapsePlayground() {
             <button
               onClick={seedSampleData}
               disabled={isSeeding}
-              className="px-3 py-1.5 rounded border border-[#E5E7EB] bg-white hover:bg-slate-50 text-slate-700 font-semibold text-xs transition"
+              className="min-h-[36px] px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-700 font-semibold text-xs transition"
             >
               {isSeeding ? "Seeding..." : "Seed Sample Data"}
             </button>
@@ -658,7 +658,7 @@ export default function SynapsePlayground() {
                 setCurrentView("landing");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className="px-3 py-1.5 rounded bg-[#111827] hover:bg-slate-800 text-white font-semibold text-xs transition flex items-center gap-1.5"
+              className="min-h-[36px] px-3.5 py-1.5 rounded-xl btn-glass-dark font-semibold text-xs transition flex items-center gap-1.5"
             >
               <ArrowLeft className="w-3 h-3" />
               <span>Return to Overview</span>
@@ -667,7 +667,7 @@ export default function SynapsePlayground() {
               <button
                 onClick={handleSignOut}
                 title="Sign Out"
-                className="px-2.5 py-1.5 rounded bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 border border-slate-200 transition text-xs font-semibold flex items-center gap-1"
+                className="min-h-[36px] px-2.5 py-1.5 rounded-xl btn-glass-secondary text-slate-600 transition text-xs font-semibold flex items-center gap-1"
               >
                 <LogOut className="w-3 h-3" />
                 <span className="hidden sm:inline">Sign Out</span>
@@ -714,14 +714,14 @@ export default function SynapsePlayground() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6 gap-6">
+      <div className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6 safe-px gap-6 safe-container overflow-x-hidden">
         {/* Navigation Tabs */}
-        <div className="flex border-b border-gray-200 gap-1 overflow-x-auto">
+        <div className="flex border-b border-gray-200 gap-1 overflow-x-auto pb-0.5">
           <button
             onClick={() => setActiveTab("query")}
             className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
               activeTab === "query"
-                ? "border-blue-500 text-blue-600 bg-blue-50"
+                ? "border-blue-500 text-blue-600 bg-blue-50/80 rounded-t-lg"
                 : "border-transparent text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -735,7 +735,7 @@ export default function SynapsePlayground() {
             }}
             className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
               activeTab === "browser"
-                ? "border-blue-500 text-blue-600 bg-blue-50"
+                ? "border-blue-500 text-blue-600 bg-blue-50/80 rounded-t-lg"
                 : "border-transparent text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -746,7 +746,7 @@ export default function SynapsePlayground() {
             onClick={() => setActiveTab("ingest")}
             className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
               activeTab === "ingest"
-                ? "border-blue-500 text-blue-600 bg-blue-50"
+                ? "border-blue-500 text-blue-600 bg-blue-50/80 rounded-t-lg"
                 : "border-transparent text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -757,7 +757,7 @@ export default function SynapsePlayground() {
             onClick={() => setActiveTab("docs")}
             className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
               activeTab === "docs"
-                ? "border-blue-500 text-blue-600 bg-blue-50"
+                ? "border-blue-500 text-blue-600 bg-blue-50/80 rounded-t-lg"
                 : "border-transparent text-gray-500 hover:text-gray-800"
             }`}
           >
@@ -825,15 +825,15 @@ export default function SynapsePlayground() {
                     if (chip.toLowerCase().startsWith("select")) setQueryMode("SQL");
                     else setQueryMode("NL");
                   }}
-                  className="min-h-[44px] px-2.5 py-1 rounded-md bg-gray-100 border border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600 transition font-mono text-[11px]"
+                  className="min-h-[44px] px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 hover:border-blue-400 hover:text-blue-600 transition font-mono text-[11px] shadow-2xs"
                 >
                   {chip}
                 </button>
               ))}
             </div>
 
-            {/* Code Editor Box */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xl flex flex-col">
+            {/* Code Editor Box with Aurora Border */}
+            <div className="aurora-card overflow-hidden shadow-lg flex flex-col">
               <textarea
                 value={queryText}
                 onChange={(e) => setQueryText(e.target.value)}
@@ -849,10 +849,10 @@ export default function SynapsePlayground() {
                     ? "Enter SQL: SELECT * FROM rides WHERE amount > 25"
                     : "Enter plain English: Average fare in rides where amount > 30"
                 }
-                className="min-h-[44px] w-full bg-white text-gray-900 font-mono text-sm p-4 focus:outline-none resize-none border-b border-gray-200"
+                className="min-h-[44px] w-full bg-white text-gray-900 font-mono text-sm p-4 focus:outline-none resize-none border-b border-gray-200 rounded-t-2xl"
               />
 
-              <div className="bg-gray-50 px-4 py-2.5 flex items-center justify-between">
+              <div className="bg-gray-50 px-4 py-2.5 flex items-center justify-between rounded-b-2xl">
                 <span className="text-gray-400 text-xs flex items-center gap-1.5">
                   Press <kbd className="px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 text-[10px] font-mono">Ctrl</kbd> + <kbd className="px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 text-[10px] font-mono">Enter</kbd> to execute
                 </span>
@@ -860,7 +860,7 @@ export default function SynapsePlayground() {
                 <button
                   onClick={handleRunQuery}
                   disabled={isQueryRunning}
-                  className="min-h-[44px] flex items-center gap-2 px-5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-200 transition disabled:opacity-50"
+                  className="min-h-[44px] flex items-center gap-2 px-5 py-1.5 rounded-xl btn-glass-primary text-xs font-semibold disabled:opacity-50"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>{isQueryRunning ? "Running..." : "Run Query"}</span>
@@ -870,7 +870,7 @@ export default function SynapsePlayground() {
 
             {/* Error Display */}
             {queryError && (
-              <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-600 text-xs flex items-start gap-2">
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-xs flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 <div>
                   <strong className="font-semibold block mb-0.5">Execution Error:</strong>
@@ -879,9 +879,9 @@ export default function SynapsePlayground() {
               </div>
             )}
 
-            {/* Query Results & Metrics Card */}
+            {/* Query Results & Metrics Card with Aurora Border */}
             {queryResult && (
-              <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-xl flex flex-col gap-3 p-4">
+              <div className="aurora-card overflow-hidden shadow-lg flex flex-col gap-3 p-4 sm:p-5">
                 {/* Stats Bar */}
                 <div className="flex flex-wrap items-center justify-between pb-3 border-b border-gray-200 gap-4">
                   <div className="flex items-center gap-6 text-xs">
@@ -1006,10 +1006,10 @@ export default function SynapsePlayground() {
                   <button
                     key={t}
                     onClick={() => loadBrowserTable(t)}
-                    className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 ${
+                    className={`min-h-[38px] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 ${
                       activeBrowserTable === t
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                        : "bg-gray-100 text-gray-700 border border-gray-200 hover:border-gray-300"
+                        ? "btn-glass-primary"
+                        : "btn-glass-secondary"
                     }`}
                   >
                     <TableIcon className="w-3.5 h-3.5" />
@@ -1020,36 +1020,36 @@ export default function SynapsePlayground() {
             </div>
 
             {/* Action Bar (Search & Export) */}
-            <div className="bg-gray-50 p-3 rounded-xl border border-gray-200 flex flex-wrap items-center justify-between gap-3">
+            <div className="aurora-card-subtle p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
               <div className="relative flex-1 max-w-sm">
-                <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   value={browserSearch}
                   onChange={(e) => setBrowserSearch(e.target.value)}
                   placeholder={`Search rows in ${activeBrowserTable || "table"}...`}
-                  className="min-h-[44px] w-full bg-gray-50 border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
+                  className="min-h-[38px] w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   onClick={exportCSV}
-                  className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-medium transition"
+                  className="min-h-[38px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl btn-glass-secondary text-xs font-medium transition"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 text-blue-600" />
                   <span>Export CSV</span>
                 </button>
                 <button
                   onClick={exportJSON}
-                  className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-medium transition"
+                  className="min-h-[38px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl btn-glass-secondary text-xs font-medium transition"
                 >
-                  <Copy className="w-3.5 h-3.5" />
+                  <Copy className="w-3.5 h-3.5 text-purple-600" />
                   <span>Export JSON</span>
                 </button>
                 <button
                   onClick={() => activeBrowserTable && loadBrowserTable(activeBrowserTable)}
-                  className="min-h-[44px] p-1.5 rounded-lg bg-gray-100 hover:bg-gray-100 text-gray-500 hover:text-gray-800 border border-gray-200 transition"
+                  className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl btn-glass-secondary text-gray-600 hover:text-gray-900 transition"
                   title="Refresh table data"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -1057,8 +1057,8 @@ export default function SynapsePlayground() {
               </div>
             </div>
 
-            {/* Table Display */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl overflow-hidden shadow-xl">
+            {/* Table Display with Aurora Card */}
+            <div className="aurora-card overflow-hidden shadow-lg">
               {isBrowserLoading ? (
                 <div className="p-10 text-center text-xs text-gray-400 flex items-center justify-center gap-2">
                   <RefreshCw className="w-4 h-4 animate-spin text-blue-500" />
@@ -1112,7 +1112,7 @@ export default function SynapsePlayground() {
         {/* ========================================================= */}
         {activeTab === "ingest" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col gap-4 shadow-xl">
+            <div className="aurora-card p-5 sm:p-6 flex flex-col gap-4 shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Custom Data Ingestion</h3>
@@ -1120,24 +1120,24 @@ export default function SynapsePlayground() {
                     Push single JSON, multi-record batches, or key-value strings into the WAL
                   </p>
                 </div>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 font-semibold">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-semibold shadow-2xs">
                   Zero-DDL
                 </span>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-500 block mb-1">Target Table</label>
+                <label className="text-xs font-semibold text-gray-700 block mb-1.5">Target Table</label>
                 <input
                   type="text"
                   value={ingestTable}
                   onChange={(e) => setIngestTable(e.target.value)}
-                  className="min-h-[44px] w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-800 font-mono focus:outline-none focus:border-blue-500"
+                  className="min-h-[44px] w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-xs text-gray-800 font-mono focus:outline-none focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <div className="flex flex-wrap items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-gray-500">Payload</label>
+                <div className="flex flex-wrap items-center justify-between mb-1.5 gap-2">
+                  <label className="text-xs font-semibold text-gray-700">Payload</label>
                   <div className="flex gap-1.5 flex-wrap">
                     <button
                       onClick={() =>
@@ -1145,7 +1145,7 @@ export default function SynapsePlayground() {
                           JSON.stringify({ fare: +(20 + Math.random() * 80).toFixed(2), driver: "Alice", user_id: 1001 }, null, 2)
                         )
                       }
-                      className="min-h-[44px] px-2 py-0.5 bg-gray-100 hover:bg-blue-600 hover:text-white text-blue-600 text-[10px] rounded border border-gray-200 font-mono transition"
+                      className="min-h-[32px] px-2.5 py-1 btn-glass-secondary text-blue-700 text-[11px] rounded-lg font-mono transition"
                     >
                       JSON Ride
                     </button>
@@ -1163,13 +1163,13 @@ export default function SynapsePlayground() {
                           )
                         )
                       }
-                      className="min-h-[44px] px-2 py-0.5 bg-gray-100 hover:bg-blue-600 hover:text-white text-blue-600 text-[10px] rounded border border-gray-200 font-mono transition"
+                      className="min-h-[32px] px-2.5 py-1 btn-glass-secondary text-blue-700 text-[11px] rounded-lg font-mono transition"
                     >
                       JSON Array (Batch)
                     </button>
                     <button
                       onClick={() => setIngestPayloadText("coffee: 100, tea: 10, cab_cost: 500")}
-                      className="min-h-[44px] px-2 py-0.5 bg-gray-100 hover:bg-blue-600 hover:text-white text-blue-600 text-[10px] rounded border border-gray-200 font-mono transition"
+                      className="min-h-[32px] px-2.5 py-1 btn-glass-secondary text-blue-700 text-[11px] rounded-lg font-mono transition"
                     >
                       Key-Value
                     </button>
@@ -1179,7 +1179,7 @@ export default function SynapsePlayground() {
                   value={ingestPayloadText}
                   onChange={(e) => setIngestPayloadText(e.target.value)}
                   rows={6}
-                  className={`min-h-[44px] w-full bg-gray-50 border rounded-lg p-3 text-xs text-gray-800 font-mono focus:outline-none resize-y ${
+                  className={`min-h-[44px] w-full bg-white border rounded-xl p-3.5 text-xs text-gray-800 font-mono focus:outline-none resize-y ${
                     new TextEncoder().encode(ingestPayloadText).length > 100 * 1024
                       ? "border-red-300 focus:border-red-500"
                       : "border-gray-200 focus:border-blue-500"
@@ -1205,10 +1205,10 @@ export default function SynapsePlayground() {
               <button
                 onClick={handlePush}
                 disabled={isPushing || new TextEncoder().encode(ingestPayloadText).length > 100 * 1024}
-                className={`min-h-[44px] w-full py-2.5 rounded-lg text-xs font-semibold shadow-lg transition flex items-center justify-center gap-2 ${
+                className={`min-h-[44px] w-full py-2.5 rounded-xl text-xs font-semibold shadow-lg transition flex items-center justify-center gap-2 ${
                   new TextEncoder().encode(ingestPayloadText).length > 100 * 1024
                     ? "bg-red-100 text-red-600 border border-red-200 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-200 disabled:opacity-50"
+                    : "btn-glass-primary disabled:opacity-50"
                 }`}
               >
                 <Send className="w-3.5 h-3.5" />
@@ -1222,9 +1222,9 @@ export default function SynapsePlayground() {
               </button>
 
               {pushAck && (
-                <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs flex flex-col gap-1.5">
+                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-emerald-600 text-[11px] uppercase tracking-wider">{pushAck.title}</span>
+                    <span className="font-bold text-emerald-700 text-[11px] uppercase tracking-wider">{pushAck.title}</span>
                     <span className="font-mono text-gray-500 text-[11px]">RowID: {pushAck.rowId}</span>
                   </div>
                   <span className="text-gray-700 text-xs">{pushAck.detail}</span>
@@ -1232,7 +1232,7 @@ export default function SynapsePlayground() {
               )}
             </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 flex flex-col gap-4 shadow-xl">
+            <div className="aurora-card p-5 sm:p-6 flex flex-col gap-4 shadow-xl">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-bold text-gray-900">Synthetic Stress Generator</h3>
@@ -1240,17 +1240,17 @@ export default function SynapsePlayground() {
                     Programmatically streams 25–250 simulated transactions into the database
                   </p>
                 </div>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-amber-50 text-amber-600 border border-amber-200 font-semibold">
+                <span className="text-[11px] px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 font-semibold shadow-2xs">
                   Benchmark Bot
                 </span>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-gray-500 block mb-1">Records Count</label>
+                <label className="text-xs font-semibold text-gray-700 block mb-1.5">Records Count</label>
                 <select
                   value={batchSize}
                   onChange={(e) => setBatchSize(Number(e.target.value))}
-                  className="min-h-[44px] w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-800 font-mono focus:outline-none focus:border-blue-500"
+                  className="min-h-[44px] w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2 text-xs text-gray-800 font-mono focus:outline-none focus:border-blue-500"
                 >
                   <option value={25}>25 synthetic records</option>
                   <option value={50}>50 synthetic records</option>
@@ -1262,34 +1262,34 @@ export default function SynapsePlayground() {
               <button
                 onClick={handleGenerateBatch}
                 disabled={isGenerating}
-                className="min-h-[44px] w-full py-2.5 bg-gray-200 hover:bg-gray-200 text-gray-900 rounded-lg text-xs font-semibold border border-gray-300 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="min-h-[44px] w-full py-2.5 btn-glass-secondary text-gray-900 rounded-xl text-xs font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                <Zap className="w-3.5 h-3.5 text-amber-600" />
+                <Zap className="w-3.5 h-3.5 text-amber-600 fill-current" />
                 <span>{isGenerating ? `Streaming ${genProgress}%...` : `Ingest ${batchSize} Synthetic Batch`}</span>
               </button>
 
               {isGenerating && (
-                <div className="w-full bg-gray-50 rounded-full h-2 overflow-hidden border border-gray-200">
+                <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden border border-gray-200">
                   <div
-                    className="bg-blue-500 h-full transition-all duration-100 ease-out"
+                    className="bg-blue-600 h-full transition-all duration-100 ease-out"
                     style={{ width: `${genProgress}%` }}
                   />
                 </div>
               )}
 
               {genStats && (
-                <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 flex flex-col gap-2">
+                <div className="p-4 rounded-xl bg-slate-50 border border-gray-200 flex flex-col gap-2">
                   <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Batch Summary</h4>
                   <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="p-2 bg-gray-100 rounded border border-gray-200">
+                    <div className="p-2.5 bg-white rounded-lg border border-gray-200 shadow-2xs">
                       <span className="text-gray-400 block text-[10px]">Ingested</span>
                       <span className="font-bold text-gray-900 font-mono">{genStats.total}</span>
                     </div>
-                    <div className="p-2 bg-gray-100 rounded border border-gray-200">
+                    <div className="p-2.5 bg-white rounded-lg border border-gray-200 shadow-2xs">
                       <span className="text-gray-400 block text-[10px]">Median Latency</span>
                       <span className="font-bold text-emerald-600 font-mono">{genStats.median}</span>
                     </div>
-                    <div className="p-2 bg-gray-100 rounded border border-gray-200">
+                    <div className="p-2.5 bg-white rounded-lg border border-gray-200 shadow-2xs">
                       <span className="text-gray-400 block text-[10px]">Status</span>
                       <span className="font-bold text-blue-600 text-[11px]">{genStats.status}</span>
                     </div>
@@ -1304,7 +1304,7 @@ export default function SynapsePlayground() {
         {/* TAB 4: SYNTAX & RULES CHEAT SHEET                         */}
         {/* ========================================================= */}
         {activeTab === "docs" && (
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 shadow-xl flex flex-col gap-6 max-w-4xl mx-auto">
+          <div className="aurora-card p-6 sm:p-8 shadow-xl flex flex-col gap-6 max-w-4xl mx-auto">
             <div>
               <h2 className="text-xl font-bold text-gray-900">SynapseDB Syntax & Ingestion Rules</h2>
               <p className="text-xs text-gray-500 mt-1">
@@ -1313,41 +1313,41 @@ export default function SynapsePlayground() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 flex flex-col gap-2">
+              <div className="aurora-card-subtle p-5 flex flex-col gap-2 shadow-2xs">
                 <h3 className="font-bold text-blue-600 text-sm">1. Key-Value Notation</h3>
-                <p className="text-gray-500">Use colons <code>:</code> or equals <code>=</code>. No spaces inside keys:</p>
-                <pre className="bg-gray-100 p-2.5 rounded font-mono text-gray-800 text-[11px]">
+                <p className="text-gray-600">Use colons <code>:</code> or equals <code>=</code>. No spaces inside keys:</p>
+                <pre className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg font-mono text-gray-800 text-[11px]">
                   coffee: 100, tea: 10, cab_cost: 500
                 </pre>
-                <span className="text-emerald-600 text-[11px]">→ Creates typed Int64 columns automatically</span>
+                <span className="text-emerald-600 text-[11px] font-semibold">→ Creates typed Int64 columns automatically</span>
               </div>
 
-              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 flex flex-col gap-2">
+              <div className="aurora-card-subtle p-5 flex flex-col gap-2 shadow-2xs">
                 <h3 className="font-bold text-blue-600 text-sm">2. JSON Array (Batch)</h3>
-                <p className="text-gray-500">Pasting an array creates independent rows for mathematical aggregations:</p>
-                <pre className="bg-gray-100 p-2.5 rounded font-mono text-gray-800 text-[11px]">
+                <p className="text-gray-600">Pasting an array creates independent rows for mathematical aggregations:</p>
+                <pre className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg font-mono text-gray-800 text-[11px]">
 {`[
   {"item": "coffee", "cost": 100},
   {"item": "tea", "cost": 10}
 ]`}
                 </pre>
-                <span className="text-emerald-600 text-[11px]">→ Enables SUM(cost) & AVG(cost)</span>
+                <span className="text-emerald-600 text-[11px] font-semibold">→ Enables SUM(cost) & AVG(cost)</span>
               </div>
 
-              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 flex flex-col gap-2">
+              <div className="aurora-card-subtle p-5 flex flex-col gap-2 shadow-2xs">
                 <h3 className="font-bold text-blue-600 text-sm">3. SQL Queries</h3>
-                <p className="text-gray-500">Supports column projection, comparison filters, and zone map pruning:</p>
-                <pre className="bg-gray-100 p-2.5 rounded font-mono text-gray-800 text-[11px]">
+                <p className="text-gray-600">Supports column projection, comparison filters, and zone map pruning:</p>
+                <pre className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg font-mono text-gray-800 text-[11px]">
 {`SELECT * FROM rides WHERE amount > 30
 SELECT COUNT(*), AVG(amount) FROM rides
 SELECT * FROM demo WHERE message LIKE 'coffee'`}
                 </pre>
               </div>
 
-              <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 flex flex-col gap-2">
+              <div className="aurora-card-subtle p-5 flex flex-col gap-2 shadow-2xs">
                 <h3 className="font-bold text-purple-600 text-sm">4. Natural Language (SLM)</h3>
-                <p className="text-gray-500">Mention table name + keywords (total, average, count, max, min):</p>
-                <pre className="bg-gray-100 p-2.5 rounded font-mono text-purple-600 text-[11px]">
+                <p className="text-gray-600">Mention table name + keywords (total, average, count, max, min):</p>
+                <pre className="bg-slate-50 border border-slate-200 p-2.5 rounded-lg font-mono text-purple-600 text-[11px]">
 {`Total rides where amount > 30
 Average spent in rides
 Count of orders where amount >= 100`}
