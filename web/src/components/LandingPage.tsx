@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Zap,
   Play,
@@ -35,40 +35,6 @@ export default function LandingPage({
   connected,
   pingLatency,
 }: LandingPageProps) {
-  // Animated text cycling
-  const phrases = [
-    "Sub-Millisecond Queries.",
-    "Zero Schema Setup.",
-    "Microsecond Analytics.",
-    "Vectorized SIMD Engine.",
-    "Instant JSON Ingestion.",
-  ];
-  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
-  const [displayText, setDisplayText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    const fullText = phrases[currentPhraseIndex];
-    const typingSpeed = isDeleting ? 40 : 80;
-
-    const timer = setTimeout(() => {
-      if (!isDeleting) {
-        setDisplayText(fullText.substring(0, displayText.length + 1));
-        if (displayText === fullText) {
-          setTimeout(() => setIsDeleting(true), 1800);
-        }
-      } else {
-        setDisplayText(fullText.substring(0, displayText.length - 1));
-        if (displayText === "") {
-          setIsDeleting(false);
-          setCurrentPhraseIndex((prev) => (prev + 1) % phrases.length);
-        }
-      }
-    }, typingSpeed);
-
-    return () => clearTimeout(timer);
-  }, [displayText, isDeleting, currentPhraseIndex]);
-
   // Interactive Sandbox State
   const [demoInput, setDemoInput] = useState("SELECT driver, COUNT(*), AVG(fare) FROM rides GROUP BY driver");
   const [isRunning, setIsRunning] = useState(false);
@@ -149,113 +115,130 @@ export default function LandingPage({
     <div className="w-full flex flex-col bg-white text-slate-900 font-sans safe-container overflow-x-hidden">
       
       {/* =====================================================================
-          1. HERO SECTION WITH 3D DATABASE & ANIMATED TEXT
+          1. HERO SECTION (3D GRAPHICS & FIXED HEADLINE SIDE-BY-SIDE ON DESKTOP,
+             3D GRAPHICS FIRST ON MOBILE)
          ===================================================================== */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-slate-50/90 via-sky-50/30 to-white py-12 sm:py-20 safe-px">
+      <section className="relative overflow-hidden border-b border-slate-200 bg-gradient-to-b from-slate-50/90 via-sky-50/30 to-white py-8 sm:py-12 lg:py-16 safe-px">
         
         {/* Subtle Ambient Radial Glows */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-blue-400/10 blur-[100px] pointer-events-none rounded-full" />
-        <div className="absolute top-1/3 left-1/4 w-[300px] h-[250px] bg-indigo-400/10 blur-[90px] pointer-events-none rounded-full" />
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-blue-400/10 blur-[110px] pointer-events-none rounded-full" />
+        <div className="absolute top-1/3 left-1/4 w-[350px] h-[280px] bg-indigo-400/10 blur-[90px] pointer-events-none rounded-full" />
 
-        <div className="max-w-5xl mx-auto flex flex-col items-center text-center relative z-10">
+        <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 relative z-10">
           
-          {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50/90 border border-blue-200/90 text-blue-700 text-xs font-semibold uppercase tracking-wider mb-6 shadow-2xs backdrop-blur-md">
-            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-            <span>The Instant Rust Cloud Database</span>
-            <span className="hidden sm:inline text-blue-300">•</span>
-            <span className="hidden sm:inline text-blue-600 font-mono font-normal">SIMD In-Memory</span>
-          </div>
-
-          {/* Animated Headline with Iridescent Text Animation */}
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-950 leading-[1.18] min-h-[1.25em]">
-            <span>Store Any Data. </span>
-            <span className="inline-block mt-1 sm:mt-0">
-              <span className="text-aurora-shimmer font-black">
-                {displayText}
-              </span>
-              <span className="typing-cursor" />
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="mt-5 text-base sm:text-lg lg:text-xl text-slate-600 font-normal leading-relaxed max-w-2xl">
-            Send raw JSON or CSV payloads directly to SynapseDB. No tedious schema migrations, zero DDL statements, and no database configuration. Analyze gigabytes in microseconds.
-          </p>
-
-          {/* Glassmorphism Action CTAs */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full max-w-md">
-            <button
-              onClick={() => onLaunchStudio("query")}
-              className="w-full sm:w-auto min-h-[48px] px-7 py-3 rounded-2xl btn-glass-primary font-semibold text-sm flex items-center justify-center gap-2 active:scale-98"
-            >
-              <span>Test Free Playground</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            <a
-              href="#demo-sandbox"
-              className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-2xl btn-glass-secondary font-semibold text-sm flex items-center justify-center gap-2"
-            >
-              <span>Try Live Query Demo</span>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
-            </a>
-          </div>
-
-          {/* 3D DATABASE HERO COMPONENT (At top of website) */}
-          <div className="mt-12 w-full">
+          {/* 3D GRAPHICS HERO CENTERPIECE (First on mobile, right side on laptop) */}
+          <div className="w-full lg:w-1/2 order-1 lg:order-2 flex justify-center">
             <Database3DHero onExploreClick={() => onLaunchStudio("query")} />
           </div>
 
-          {/* 4 Feature Metric Cards with Aurora Glowing Borders */}
-          <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 w-full text-left">
+          {/* HERO TEXT (Second on mobile, left side on laptop - Fixed height & static) */}
+          <div className="w-full lg:w-1/2 order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left">
             
-            <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Speed</span>
-                <Clock className="w-4 h-4 text-blue-600" />
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">0.04 ms</div>
-              <div className="text-xs text-slate-500 mt-1">Instant in-memory queries</div>
+            {/* Top Pill Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 border border-blue-200/90 text-blue-700 text-xs font-semibold uppercase tracking-wider mb-5 shadow-2xs backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              <span>The Instant Rust Cloud Database</span>
+              <span className="hidden sm:inline text-blue-300">•</span>
+              <span className="hidden sm:inline text-blue-600 font-mono font-normal">SIMD In-Memory</span>
             </div>
 
-            <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Setup</span>
-                <Sparkles className="w-4 h-4 text-emerald-600" />
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">Zero DDL</div>
-              <div className="text-xs text-slate-500 mt-1">Auto-infer schema types</div>
+            {/* Fixed Headline (No vertical height shift) */}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-slate-950 leading-[1.12]">
+              <span>Store Any Data. </span>
+              <span className="text-aurora-shimmer block mt-1.5 sm:mt-2 font-black">
+                Query in Milliseconds.
+              </span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="mt-4 text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-xl">
+              Send raw JSON or CSV payloads directly to SynapseDB. No tedious schema migrations, zero DDL statements, and no database configuration. Analyze gigabytes in microseconds.
+            </p>
+
+            {/* Glassmorphism Action CTAs */}
+            <div className="mt-7 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 w-full max-w-md">
+              <button
+                onClick={() => onLaunchStudio("query")}
+                className="w-full sm:w-auto min-h-[48px] px-7 py-3 rounded-2xl btn-glass-primary font-semibold text-sm flex items-center justify-center gap-2 active:scale-98"
+              >
+                <span>Test Free Playground</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <a
+                href="#demo-sandbox"
+                className="w-full sm:w-auto min-h-[48px] px-6 py-3 rounded-2xl btn-glass-secondary font-semibold text-sm flex items-center justify-center gap-2"
+              >
+                <span>Try Live Query Demo</span>
+                <ChevronRight className="w-4 h-4 text-slate-400" />
+              </a>
             </div>
 
-            <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Security</span>
-                <ShieldCheck className="w-4 h-4 text-indigo-600" />
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">Protected</div>
-              <div className="text-xs text-slate-500 mt-1">Built-in rate limiting guards</div>
-            </div>
-
-            <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
-              <div className="flex items-center justify-between text-slate-400 mb-2">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Export</span>
-                <Download className="w-4 h-4 text-amber-600" />
-              </div>
-              <div className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">1-Click</div>
-              <div className="text-xs text-slate-500 mt-1">Download CSV or JSON anytime</div>
+            {/* Highlights Row */}
+            <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-semibold text-slate-600">
+              <span className="flex items-center gap-1.5 text-emerald-600">
+                <CheckCircle2 className="w-4 h-4" /> 0.04 ms In-Memory SIMD
+              </span>
+              <span className="flex items-center gap-1.5 text-blue-600">
+                <CheckCircle2 className="w-4 h-4" /> Zero-DDL Schemas
+              </span>
+              <span className="flex items-center gap-1.5 text-indigo-600">
+                <CheckCircle2 className="w-4 h-4" /> Crash-Durable fsync WAL
+              </span>
             </div>
 
           </div>
 
         </div>
+
+        {/* 4 Feature Metric Cards with Aurora Glowing Borders */}
+        <div className="w-full max-w-7xl mx-auto mt-10 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-left">
+          
+          <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Speed</span>
+              <Clock className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">0.04 ms</div>
+            <div className="text-xs text-slate-500 mt-1">Instant in-memory queries</div>
+          </div>
+
+          <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Setup</span>
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">Zero DDL</div>
+            <div className="text-xs text-slate-500 mt-1">Auto-infer schema types</div>
+          </div>
+
+          <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Security</span>
+              <ShieldCheck className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">Protected</div>
+            <div className="text-xs text-slate-500 mt-1">Built-in rate limiting guards</div>
+          </div>
+
+          <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
+            <div className="flex items-center justify-between text-slate-400 mb-2">
+              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Export</span>
+              <Download className="w-4 h-4 text-amber-600" />
+            </div>
+            <div className="text-xl sm:text-2xl font-black text-slate-950 tracking-tight">1-Click</div>
+            <div className="text-xs text-slate-500 mt-1">Download CSV or JSON anytime</div>
+          </div>
+
+        </div>
+
       </section>
 
       {/* =====================================================================
           2. INTERACTIVE LIVE QUERY DEMO (WITH AURORA BORDER)
          ===================================================================== */}
-      <section id="demo-sandbox" className="py-14 sm:py-20 safe-px border-b border-slate-200 bg-slate-50/70">
-        <div className="max-w-4xl mx-auto">
+      <section id="demo-sandbox" className="py-12 sm:py-16 safe-px border-b border-slate-200 bg-slate-50/70">
+        <div className="w-full max-w-7xl mx-auto">
           
           <div className="text-center max-w-xl mx-auto mb-8">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100/80 text-blue-700 mb-2.5 backdrop-blur-sm">
@@ -271,7 +254,7 @@ export default function LandingPage({
           </div>
 
           {/* Interactive Card with Aurora Border */}
-          <div className="aurora-card shadow-lg overflow-hidden">
+          <div className="aurora-card shadow-lg overflow-hidden max-w-5xl mx-auto">
             
             {/* Terminal Header */}
             <div className="bg-slate-100/90 border-b border-slate-200 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
@@ -405,10 +388,10 @@ export default function LandingPage({
       {/* =====================================================================
           3. THREE SIMPLE SUPERPOWERS (AURORA CARDS)
          ===================================================================== */}
-      <section className="py-16 sm:py-24 safe-px bg-white border-b border-slate-200">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-14 sm:py-20 safe-px bg-white border-b border-slate-200">
+        <div className="w-full max-w-7xl mx-auto">
           
-          <div className="text-center max-w-xl mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-xl mx-auto mb-10 sm:mb-14">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3.5 py-1 rounded-full bg-slate-100 text-slate-700 mb-2.5">
               <span>Why Choose SynapseDB</span>
             </div>
@@ -481,10 +464,10 @@ export default function LandingPage({
       {/* =====================================================================
           4. HOW IT WORKS (AURORA CARDS)
          ===================================================================== */}
-      <section className="py-16 sm:py-20 safe-px bg-slate-50/70 border-b border-slate-200">
-        <div className="max-w-4xl mx-auto">
+      <section className="py-14 sm:py-20 safe-px bg-slate-50/70 border-b border-slate-200">
+        <div className="w-full max-w-7xl mx-auto">
           
-          <div className="text-center max-w-lg mx-auto mb-12">
+          <div className="text-center max-w-lg mx-auto mb-10 sm:mb-12">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-700 mb-2">
               <span>Simple Workflow</span>
             </div>
@@ -531,8 +514,8 @@ export default function LandingPage({
       {/* =====================================================================
           5. VISUAL SPEED COMPARISON (AURORA CARD)
          ===================================================================== */}
-      <section className="py-16 sm:py-20 safe-px bg-white border-b border-slate-200">
-        <div className="max-w-3xl mx-auto">
+      <section className="py-14 sm:py-20 safe-px bg-white border-b border-slate-200">
+        <div className="w-full max-w-7xl mx-auto">
           
           <div className="text-center mb-10">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-950 tracking-tight">
@@ -543,7 +526,7 @@ export default function LandingPage({
             </p>
           </div>
 
-          <div className="aurora-card p-6 sm:p-8 space-y-4 shadow-sm">
+          <div className="aurora-card p-6 sm:p-8 space-y-4 shadow-sm max-w-4xl mx-auto">
             {/* SynapseDB */}
             <div className="p-4 rounded-xl bg-blue-50/90 border border-blue-200">
               <div className="flex items-center justify-between text-xs font-bold text-blue-900 mb-1.5">
@@ -589,17 +572,17 @@ export default function LandingPage({
          ===================================================================== */}
       <section className="py-16 sm:py-20 safe-px bg-[#0B0F19] text-white text-center relative overflow-hidden">
         {/* Ambient Aurora Glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[300px] bg-blue-500/15 blur-[120px] pointer-events-none rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-blue-500/15 blur-[120px] pointer-events-none rounded-full" />
         
-        <div className="max-w-2xl mx-auto relative z-10">
+        <div className="w-full max-w-7xl mx-auto relative z-10 text-center">
           <div className="inline-flex items-center gap-1.5 text-xs font-medium px-3.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 mb-4 backdrop-blur-md">
             <Cpu className="w-3.5 h-3.5 text-blue-400" />
             <span>Free & Open Source Rust Core</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white">
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-white max-w-2xl mx-auto">
             Ready to Experience SynapseDB?
           </h2>
-          <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed">
+          <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl mx-auto">
             Create your free account or test the online playground directly from your browser.
           </p>
 
@@ -629,7 +612,7 @@ export default function LandingPage({
           7. FOOTER
          ===================================================================== */}
       <footer className="border-t border-slate-200 bg-white py-8 safe-px text-xs text-slate-500">
-        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold shadow-xs">
               <Zap className="w-3.5 h-3.5 text-white fill-current" />

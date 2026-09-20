@@ -367,9 +367,9 @@ export default function SynapsePlayground() {
   if (currentView === "landing") {
     return (
       <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
-        {/* Landing Top Navbar */}
-        <header className="border-b border-slate-200/80 bg-white/85 backdrop-blur-xl px-4 sm:px-6 safe-px py-3 sticky top-0 z-40 shadow-2xs">
-          <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+        {/* Landing Top Navbar (Fixed to top of screen) */}
+        <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl px-3 sm:px-6 safe-px py-3 shadow-2xs">
+          <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-3">
             
             {/* Logo */}
             <div className="flex items-center gap-3">
@@ -569,13 +569,15 @@ export default function SynapsePlayground() {
           )}
         </header>
 
-        {/* Landing Page Content */}
-        <LandingPage
-          onLaunchStudio={handleOpenStudio}
-          apiUrl={apiUrl}
-          connected={connected}
-          pingLatency={pingLatency}
-        />
+        {/* Landing Page Content (with top padding for fixed navbar) */}
+        <main className="pt-[58px] sm:pt-[64px] w-full flex-1 flex flex-col">
+          <LandingPage
+            onLaunchStudio={handleOpenStudio}
+            apiUrl={apiUrl}
+            connected={connected}
+            pingLatency={pingLatency}
+          />
+        </main>
 
         {/* Auth Modal */}
         <AuthModal
@@ -611,9 +613,9 @@ export default function SynapsePlayground() {
 
   return (
     <div className="min-h-screen bg-[#FAFAF9] text-[#111827] flex flex-col font-sans">
-      {/* Studio Header */}
-      <header className="border-b border-[#E5E7EB] bg-white/90 backdrop-blur-xl px-4 sm:px-6 safe-px py-2.5 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 font-mono text-xs">
+      {/* Studio Header (Fixed to top of screen) */}
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-[#E5E7EB] bg-white/95 backdrop-blur-xl px-3 sm:px-6 safe-px py-2.5 shadow-2xs">
+        <div className="max-w-7xl w-full mx-auto flex items-center justify-between gap-4 font-mono text-xs">
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
@@ -651,7 +653,7 @@ export default function SynapsePlayground() {
               disabled={isSeeding}
               className="min-h-[36px] px-3.5 py-1.5 rounded-xl btn-glass-secondary text-slate-700 font-semibold text-xs transition"
             >
-              {isSeeding ? "Seeding..." : "Seed Sample Data"}
+              {isSeeding ? "Seed Sample Data" : "Seed Sample Data"}
             </button>
             <button
               onClick={() => {
@@ -679,8 +681,8 @@ export default function SynapsePlayground() {
 
       {/* Endpoint Config Dropdown Modal */}
       {showConfig && (
-        <div className="bg-white border-b border-[#E5E7EB] px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
-          <div className="flex items-center gap-3 flex-1 max-w-xl">
+        <div className="fixed top-[49px] inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-b border-[#E5E7EB] px-6 py-3 flex flex-wrap items-center justify-between gap-4 text-xs font-mono shadow-md">
+          <div className="flex items-center gap-3 flex-1 max-w-xl mx-auto">
             <span className="text-gray-500 whitespace-nowrap">Cloud Backend URL:</span>
             <input
               type="text"
@@ -714,7 +716,7 @@ export default function SynapsePlayground() {
         </div>
       )}
 
-      <div className="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6 safe-px gap-6 safe-container overflow-x-hidden">
+      <div className="pt-[58px] sm:pt-[64px] flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 md:p-6 safe-px gap-6 safe-container overflow-x-hidden">
         {/* Navigation Tabs */}
         <div className="flex border-b border-gray-200 gap-1 overflow-x-auto pb-0.5">
           <button
