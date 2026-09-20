@@ -24,8 +24,8 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
       badge: "Active Buffer",
       latency: "< 0.01 ms",
       desc: "Instant lock-free ingestion for raw JSON & CSV records",
-      color: "#38bdf8",
-      glow: "rgba(56, 189, 248, 0.45)",
+      color: "#10b981",
+      glow: "rgba(16, 185, 129, 0.45)",
     },
     {
       id: 1,
@@ -33,8 +33,8 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
       badge: "SIMD Analytics",
       latency: "0.04 ms",
       desc: "Zero-copy columnar compression with vectorized CPU aggregations",
-      color: "#818cf8",
-      glow: "rgba(129, 140, 248, 0.45)",
+      color: "#059669",
+      glow: "rgba(5, 150, 105, 0.45)",
     },
     {
       id: 2,
@@ -67,7 +67,7 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
     }
     const shockwaves: Shockwave[] = [];
 
-    // Particle nodes orbiting
+    // Particle nodes orbiting (Green & White only)
     const particleCount = 28;
     const particles = Array.from({ length: particleCount }, (_, i) => ({
       angle: (i / particleCount) * Math.PI * 2,
@@ -76,7 +76,7 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
       yOffset: -60 + ((i * 15) % 130),
       size: 1.5 + (i % 3) * 1.2,
       pulsePhase: Math.random() * Math.PI * 2,
-      color: i % 3 === 0 ? "#38bdf8" : i % 3 === 1 ? "#818cf8" : "#34d399",
+      color: i % 3 === 0 ? "#10b981" : i % 3 === 1 ? "#ffffff" : "#34d399",
     }));
 
     function handleResize() {
@@ -142,7 +142,7 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
       const tierSpacing = isMobile ? 54 : 64;
       const diskHeight = isMobile ? 22 : 26;
 
-      // Draw subtle background ambient radial aura
+      // Draw subtle background ambient radial aura (Green & Obsidian Black)
       const radialGrad = ctx.createRadialGradient(
         centerX,
         centerY,
@@ -151,18 +151,18 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
         centerY,
         baseRadiusX * 2.2
       );
-      radialGrad.addColorStop(0, "rgba(59, 130, 246, 0.12)");
-      radialGrad.addColorStop(0.5, "rgba(99, 102, 241, 0.06)");
-      radialGrad.addColorStop(1, "rgba(255, 255, 255, 0)");
+      radialGrad.addColorStop(0, "rgba(16, 185, 129, 0.14)");
+      radialGrad.addColorStop(0.5, "rgba(5, 150, 105, 0.06)");
+      radialGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
       ctx.fillStyle = radialGrad;
       ctx.fillRect(0, 0, width, height);
 
-      // Render vertical holographic energy conduit behind cylinders
+      // Render vertical holographic energy conduit behind cylinders (Green)
       const conduitGrad = ctx.createLinearGradient(0, centerY - 110, 0, centerY + 110);
-      conduitGrad.addColorStop(0, "rgba(56, 189, 248, 0)");
-      conduitGrad.addColorStop(0.3, "rgba(56, 189, 248, 0.4)");
-      conduitGrad.addColorStop(0.7, "rgba(129, 140, 248, 0.4)");
-      conduitGrad.addColorStop(1, "rgba(52, 211, 153, 0)");
+      conduitGrad.addColorStop(0, "rgba(16, 185, 129, 0)");
+      conduitGrad.addColorStop(0.3, "rgba(52, 211, 153, 0.45)");
+      conduitGrad.addColorStop(0.7, "rgba(16, 185, 129, 0.45)");
+      conduitGrad.addColorStop(1, "rgba(5, 150, 105, 0)");
 
       ctx.beginPath();
       ctx.strokeStyle = conduitGrad;
@@ -175,11 +175,11 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
       ctx.setLineDash([]);
 
       // 3 Database Tiers: 0: MemTable (top), 1: Columnar (middle), 2: WAL (bottom)
-      // Render back-to-front: Bottom (Tier 2) to Top (Tier 0)
+      // Render back-to-front: Bottom (Tier 2) to Top (Tier 0) - Green, White, Black
       const tiers = [
-        { index: 2, label: "WAL", color: "#10b981", accent: "#34d399", yOffset: tierSpacing },
-        { index: 1, label: "COLUMNAR", color: "#6366f1", accent: "#818cf8", yOffset: 0 },
-        { index: 0, label: "MEMTABLE", color: "#0284c7", accent: "#38bdf8", yOffset: -tierSpacing },
+        { index: 2, label: "WAL", color: "#047857", accent: "#10b981", yOffset: tierSpacing },
+        { index: 1, label: "COLUMNAR", color: "#065f46", accent: "#34d399", yOffset: 0 },
+        { index: 0, label: "MEMTABLE", color: "#059669", accent: "#6ee7b7", yOffset: -tierSpacing },
       ];
 
       tiers.forEach((tier) => {
@@ -322,7 +322,7 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
         const tierY = centerY + (sw.tierIndex === 0 ? -tierSpacing : sw.tierIndex === 1 ? 0 : tierSpacing);
         ctx.beginPath();
         ctx.ellipse(centerX, tierY, sw.radius, sw.radius * 0.42, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(56, 189, 248, ${sw.opacity})`;
+        ctx.strokeStyle = `rgba(52, 211, 153, ${sw.opacity})`;
         ctx.lineWidth = 2;
         ctx.stroke();
       }
@@ -357,16 +357,16 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
         {/* Top Control & Status Bar */}
         <div className="absolute top-3 inset-x-3 sm:inset-x-5 z-20 flex items-center justify-between pointer-events-none">
           <div className="flex items-center gap-2 pointer-events-auto">
-            <div className="px-3 py-1 rounded-full glass-pill text-[11px] font-mono font-semibold text-slate-700 flex items-center gap-1.5 shadow-2xs">
+            <div className="px-3.5 py-1.5 rounded-full glass-pill text-[11px] font-mono font-semibold text-slate-900 flex items-center gap-1.5 shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
               <span>3D Engine Live</span>
             </div>
             <button
               onClick={triggerPulse}
-              className="btn-glass-secondary px-2.5 py-1 rounded-full text-[11px] font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 shadow-2xs"
+              className="btn-glass-secondary px-3 py-1.5 rounded-full text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 shadow-2xs"
               title="Send a test query pulse through the 3D database stack"
             >
-              <Zap className="w-3 h-3 text-amber-500 fill-amber-500" />
+              <Zap className="w-3 h-3 text-emerald-500 fill-emerald-500" />
               <span className="hidden sm:inline">Send Query Pulse</span>
             </button>
           </div>
@@ -377,7 +377,7 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
         </div>
 
         {/* 3D Canvas Element */}
-        <div className="relative w-full bg-gradient-to-b from-slate-900 via-[#0B0F19] to-slate-950 rounded-[calc(1.5rem-1px)] cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[360px]">
+        <div className="relative w-full bg-gradient-to-b from-black via-[#0B0F19] to-black rounded-[calc(1.75rem-1.5px)] cursor-grab active:cursor-grabbing overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[360px]">
           <canvas ref={canvasRef} className="w-full h-full block" />
 
           {/* Floating Tier Badges on the sides for desktop */}
@@ -387,14 +387,14 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
                 key={tier.id}
                 onMouseEnter={() => setActiveTier(tier.id)}
                 onMouseLeave={() => setActiveTier(null)}
-                className={`pointer-events-auto p-2.5 rounded-xl border backdrop-blur-md transition-all duration-300 max-w-[200px] text-left cursor-pointer ${
+                className={`pointer-events-auto p-3 rounded-2xl border backdrop-blur-md transition-all duration-300 max-w-[210px] text-left cursor-pointer ${
                   activeTier === tier.id
-                    ? "bg-slate-800/90 border-blue-400/80 shadow-lg shadow-blue-500/20 scale-105"
-                    : "bg-slate-900/60 border-slate-700/60 hover:bg-slate-800/80"
+                    ? "bg-black/90 border-emerald-400/90 shadow-lg shadow-emerald-500/25 scale-105"
+                    : "bg-black/70 border-white/15 hover:bg-black/90"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
                     {tier.badge}
                   </span>
                   <span className="text-[10px] font-mono font-bold text-emerald-400">
@@ -408,8 +408,8 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
 
           {/* Bottom Floating Hint */}
           <div className="absolute bottom-3 inset-x-0 flex items-center justify-center pointer-events-none px-4">
-            <div className="px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-slate-700/60 text-slate-400 text-[11px] flex items-center gap-2">
-              <Sparkles className="w-3 h-3 text-sky-400" />
+            <div className="px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/15 text-slate-300 text-[11px] flex items-center gap-2">
+              <Sparkles className="w-3 h-3 text-emerald-400" />
               <span>Hover or move cursor over the 3D stack to explore memory & disk tiers</span>
             </div>
           </div>
@@ -423,13 +423,13 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
           <button
             key={tier.id}
             onClick={() => setActiveTier(activeTier === tier.id ? null : tier.id)}
-            className={`p-2 rounded-xl text-center border transition ${
+            className={`p-2.5 rounded-2xl text-center border transition ${
               activeTier === tier.id
-                ? "bg-blue-50 border-blue-400 text-blue-900 font-bold shadow-2xs"
-                : "bg-white border-slate-200 text-slate-700 font-medium"
+                ? "bg-emerald-50 border-emerald-500 text-emerald-950 font-bold shadow-2xs"
+                : "bg-white border-slate-200 text-slate-800 font-medium"
             }`}
           >
-            <div className="text-[10px] font-mono text-slate-400">{tier.latency}</div>
+            <div className="text-[10px] font-mono text-emerald-700 font-semibold">{tier.latency}</div>
             <div className="text-[11px] truncate mt-0.5">{tier.badge}</div>
           </button>
         ))}
