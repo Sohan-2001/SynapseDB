@@ -125,13 +125,16 @@ export default function PlaygroundStudio({
   const [isHealthTesting, setIsHealthTesting] = useState(false);
   const [healthLatency, setHealthLatency] = useState<number | null>(pingLatency);
 
-  // Load tables and initial schema on mount
+  // Load tables and initial schema on mount or user change
   useEffect(() => {
-    loadAllSchema();
-    if (activeBrowserTable) {
-      loadBrowserTable(activeBrowserTable);
-    }
-  }, []);
+    loadAllSchema().then((tables) => {
+      if (tables.length === 0) {
+        seedSampleData();
+      } else if (activeBrowserTable) {
+        loadBrowserTable(activeBrowserTable);
+      }
+    });
+  }, [currentUser?.id]);
 
   // Update health latency when pingLatency updates from parent
   useEffect(() => {
@@ -143,15 +146,15 @@ export default function PlaygroundStudio({
   // -----------------------------------------------------------------
   // API ACTIONS
   // -----------------------------------------------------------------
-  async function loadAllSchema() {
+  async function loadAllSchema(): Promise<string[]> {
     setIsSchemaLoading(true);
     try {
       const res = await fetchSchema("", apiUrl);
-      const tables = res.tables && res.tables.length > 0 ? res.tables : ["rides", "expenses"];
-      setTablesList(tables);
+      const tables = res.tables || [];
+      setTablesList(tables.length > 0 ? tables : ["rides", "expenses"]);
 
       const detailsMap: Record<string, SchemaResponse> = {};
-      for (const t of tables) {
+      for (const t of (tables.length > 0 ? tables : ["rides", "expenses"])) {
         try {
           const detail = await fetchSchema(t, apiUrl);
           detailsMap[t] = detail;
@@ -165,39 +168,17 @@ export default function PlaygroundStudio({
               { id: 2, name: "driver", type: "Utf8" },
               { id: 3, name: "user_id", type: "Int64" },
             ],
-            row_count: 4,
+            row_count: 0,
           };
         }
       }
       setSchemaDetails(detailsMap);
-      if (!activeBrowserTable && tables.length > 0) {
+      if (tables.length > 0 && (!activeBrowserTable || !tables.includes(activeBrowserTable))) {
         setActiveBrowserTable(tables[0]);
       }
+      return tables;
     } catch {
-      // Offline fallback schema
-      setTablesList(["rides", "expenses"]);
-      setSchemaDetails({
-        rides: {
-          table: "rides",
-          tables: ["rides"],
-          columns: [
-            { id: 1, name: "amount", type: "Float64" },
-            { id: 2, name: "driver", type: "Utf8" },
-            { id: 3, name: "user_id", type: "Int64" },
-          ],
-          row_count: 5,
-        },
-        expenses: {
-          table: "expenses",
-          tables: ["expenses"],
-          columns: [
-            { id: 1, name: "coffee", type: "Int64" },
-            { id: 2, name: "tea", type: "Int64" },
-            { id: 3, name: "cab_cost", type: "Int64" },
-          ],
-          row_count: 1,
-        },
-      });
+      return [];
     } finally {
       setIsSchemaLoading(false);
     }

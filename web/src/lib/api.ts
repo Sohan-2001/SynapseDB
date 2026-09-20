@@ -50,6 +50,22 @@ export interface HealthResponse {
   plan?: string;
 }
 
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (typeof window !== "undefined") {
+    try {
+      const raw = localStorage.getItem("synapsedb_auth_session");
+      if (raw) {
+        const user = JSON.parse(raw);
+        if (user && user.token) {
+          headers["Authorization"] = `Bearer ${user.token}`;
+        }
+      }
+    } catch {}
+  }
+  return headers;
+}
+
 export async function pingHealth(baseUrl = getApiBaseUrl()): Promise<{ ok: boolean; data?: HealthResponse; latencyMs: number }> {
   const start = performance.now();
   try {
@@ -66,7 +82,7 @@ export async function pingHealth(baseUrl = getApiBaseUrl()): Promise<{ ok: boole
 
 export async function fetchEngineInfo(baseUrl = getApiBaseUrl()): Promise<{ ok: boolean; info?: any }> {
   try {
-    const res = await fetch(`${baseUrl}/info`, { method: "GET" });
+    const res = await fetch(`${baseUrl}/info`, { method: "GET", headers: getAuthHeaders() });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const info = await res.json();
     return { ok: true, info };
@@ -77,7 +93,10 @@ export async function fetchEngineInfo(baseUrl = getApiBaseUrl()): Promise<{ ok: 
 
 export async function fetchSchema(table = "", baseUrl = getApiBaseUrl()): Promise<SchemaResponse> {
   const url = table ? `${baseUrl}/schema?table=${encodeURIComponent(table)}` : `${baseUrl}/schema`;
-  const res = await fetch(url);
+  const res = await fetch(url, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
   if (!res.ok) throw new Error(`Failed to fetch schema: HTTP ${res.status}`);
   return res.json();
 }
@@ -90,7 +109,7 @@ export async function executeQuery(query: string, baseUrl = getApiBaseUrl()): Pr
 
   const res = await fetch(`${baseUrl}/query`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ query: cleanQuery }),
   });
 
@@ -109,8 +128,8 @@ export async function executeQuery(query: string, baseUrl = getApiBaseUrl()): Pr
 
 export async function pushPayload(table: string, payload: string, baseUrl = getApiBaseUrl()) {
   const cleanTable = table.trim();
-  if (!cleanTable || !/^[a-zA-Z0-9_-]{1,64}$/.test(cleanTable)) {
-    throw new Error("Invalid table name. Only letters, numbers, hyphens, and underscores allowed (max 64 chars).");
+  if (!cleanTable || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,31}$/.test(cleanTable) || cleanTable.startsWith("u_") || cleanTable.startsWith("_")) {
+    throw new Error("Invalid table name. Must be alphanumeric (1-32 chars) and cannot start with 'u_' or '_'.");
   }
 
   // Pre-validate 100 KB limit client-side before sending across network
@@ -121,7 +140,7 @@ export async function pushPayload(table: string, payload: string, baseUrl = getA
 
   const res = await fetch(`${baseUrl}/push`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ table: cleanTable, payload }),
   });
 
@@ -141,7 +160,7 @@ export async function pushPayload(table: string, payload: string, baseUrl = getA
 export async function flushBuffers(baseUrl = getApiBaseUrl()) {
   const res = await fetch(`${baseUrl}/flush`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: getAuthHeaders(),
     body: JSON.stringify({}),
   });
   if (!res.ok) {

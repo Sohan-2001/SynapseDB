@@ -177,6 +177,91 @@ def execute_tcp(cmd: str, timeout: float = 5.0) -> str:
     return data.decode("utf-8", errors="ignore")
 
 # -------------------------------------------------------------
+# Multi-Tenant Partitioning & Security Helpers
+# -------------------------------------------------------------
+SAFE_TABLE_REGEX = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,31}$")
+
+def extract_bearer_token(handler) -> str:
+    auth_header = handler.headers.get("Authorization", "").strip()
+    if auth_header.startswith("Bearer "):
+        return auth_header[7:].strip()
+    api_key_header = handler.headers.get("X-API-Key", "").strip()
+    if api_key_header:
+        return api_key_header
+    return ""
+
+def get_tenant(handler) -> tuple[str, dict | None]:
+    token = extract_bearer_token(handler)
+    user = get_session_user(token)
+    if user:
+        clean_user_id = re.sub(r"[^a-zA-Z0-9_]", "", user["id"])
+        return f"u_{clean_user_id}_", user
+    # If unauthenticated, route to isolated public demo tenant
+    return "u_public_demo_", None
+
+def check_forbidden_identifiers(text: str) -> bool:
+    # Prohibit direct access to partitioned tables 'u_*' or internal tables '_*'
+    for token in re.findall(r"\b[a-zA-Z0-9_]+\b", text):
+        if token.startswith("u_") or token.startswith("_") or token.startswith("sys_"):
+            return True
+    return False
+
+def rewrite_query_for_tenant(query_str: str, tenant_prefix: str) -> tuple[bool, str, str]:
+    if check_forbidden_identifiers(query_str):
+        return False, "", "Direct access to internal, system, or partitioned tables is prohibited."
+
+    def replace_from(match):
+        keyword = match.group(1)
+        table = match.group(2)
+        return f"{keyword} {tenant_prefix}{table}"
+
+    rewritten = re.sub(r"(?i)\b(FROM|JOIN|INTO)\s+([a-zA-Z0-9_-]+)", replace_from, query_str)
+
+    if rewritten == query_str:
+        words = query_str.split()
+        new_words = []
+        replaced = False
+        for w in words:
+            clean_w = re.sub(r"[^a-zA-Z0-9_-]", "", w)
+            if clean_w.lower() in ["rides", "expenses", "orders", "users", "sales", "logs", "metrics", "products", "customers"] and not replaced:
+                new_words.append(w.replace(clean_w, f"{tenant_prefix}{clean_w}"))
+                replaced = True
+            else:
+                new_words.append(w)
+        rewritten = " ".join(new_words)
+
+    return True, rewritten, ""
+
+def clean_response_table_name(data: dict, tenant_prefix: str) -> dict:
+    if isinstance(data, dict):
+        if "table" in data and isinstance(data["table"], str):
+            if data["table"].startswith(tenant_prefix):
+                data["table"] = data["table"][len(tenant_prefix):]
+            elif data["table"].startswith("u_"):
+                parts = data["table"].split("_", 2)
+                if len(parts) >= 3:
+                    data["table"] = parts[2]
+    return data
+
+def ensure_demo_data_seeded():
+    try:
+        raw = execute_tcp("SCHEMA u_public_demo_rides", timeout=2.0)
+        if "error" in raw.lower() or "not found" in raw.lower():
+            demo_rides = [
+                '{"fare": 34.80, "driver": "Alice", "user_id": 1001}',
+                '{"fare": 41.20, "driver": "Diana", "user_id": 1002}',
+                '{"fare": 28.50, "driver": "Bob", "user_id": 1003}',
+                '{"fare": 32.00, "driver": "Marcus", "user_id": 1004}',
+            ]
+            for r in demo_rides:
+                execute_tcp(f"PUSH u_public_demo_rides {r}", timeout=2.0)
+            execute_tcp("PUSH u_public_demo_expenses coffee: 100, tea: 10, cab_cost: 500", timeout=2.0)
+            execute_tcp("FLUSH", timeout=2.0)
+            print("[INFO] Pre-seeded isolated public demo partition (u_public_demo_rides)")
+    except Exception as e:
+        print(f"[WARN] Demo partition seed skipped: {e}")
+
+# -------------------------------------------------------------
 # HTTP Request Handler with Security & Authentication
 # -------------------------------------------------------------
 class SynapseGatewayHandler(BaseHTTPRequestHandler):
@@ -284,6 +369,7 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                 self._respond_json(500, {"error": "Failed to fetch engine info"})
 
         elif path == "/schema":
+            tenant_prefix, _ = get_tenant(self)
             query_params = {}
             if "?" in self.path:
                 for part in self.path.split("?")[1].split("&"):
@@ -291,18 +377,31 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                         k, v = part.split("=", 1)
                         query_params[k] = v
             table = query_params.get("table", "").strip()
-            if table and not TABLE_NAME_REGEX.match(table):
-                self._respond_json(400, {"error": "Invalid table name format"})
-                return
 
-            cmd = f"SCHEMA {table}".strip()
-            try:
-                raw = execute_tcp(cmd, timeout=4.0)
-                idx = raw.find("{")
-                data = json.loads(raw[idx:]) if idx != -1 else {"raw": raw.strip()}
-                self._respond_json(200, data)
-            except Exception:
-                self._respond_json(500, {"error": "Failed to inspect schema"})
+            if table:
+                if not SAFE_TABLE_REGEX.match(table) or table.startswith("u_") or table.startswith("_") or table.startswith("sys_"):
+                    self._respond_json(400, {"error": "Invalid or reserved table name format"})
+                    return
+
+                cmd = f"SCHEMA {tenant_prefix}{table}".strip()
+                try:
+                    raw = execute_tcp(cmd, timeout=4.0)
+                    idx = raw.find("{")
+                    data = json.loads(raw[idx:]) if idx != -1 else {"raw": raw.strip()}
+                    data = clean_response_table_name(data, tenant_prefix)
+                    self._respond_json(200, data)
+                except Exception:
+                    self._respond_json(500, {"error": "Failed to inspect schema"})
+            else:
+                try:
+                    raw = execute_tcp("SCHEMA", timeout=4.0)
+                    idx = raw.find("{")
+                    data = json.loads(raw[idx:]) if idx != -1 else {"tables": []}
+                    raw_tables = data.get("tables", [])
+                    user_tables = [t[len(tenant_prefix):] for t in raw_tables if t.startswith(tenant_prefix)]
+                    self._respond_json(200, {"tables": user_tables})
+                except Exception:
+                    self._respond_json(500, {"error": "Failed to inspect schema"})
 
         else:
             self._respond_json(404, {"error": "Endpoint not found"})
@@ -380,12 +479,6 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
             }
             users[email] = user_record
             save_users(users)
-
-            try:
-                execute_tcp(f"PUSH _users {json.dumps({'user_id': user_id, 'email': email, 'name': name})}", timeout=1.0)
-            except Exception:
-                pass
-
             token = create_session(user_id, name, email)
             self._respond_json(201, {
                 "status": "success",
@@ -483,10 +576,17 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                 self._respond_json(400, {"error": "Query string too long (max 4096 chars)"})
                 return
 
+            tenant_prefix, _ = get_tenant(self)
+            allowed, rewritten_query, err_msg = rewrite_query_for_tenant(query_str, tenant_prefix)
+            if not allowed:
+                self._respond_json(403, {"status": "error", "error": err_msg})
+                return
+
             try:
-                raw = execute_tcp(f"QUERY {query_str}", timeout=10.0)
+                raw = execute_tcp(f"QUERY {rewritten_query}", timeout=10.0)
                 idx = raw.find("{")
                 data = json.loads(raw[idx:]) if idx != -1 else {"raw": raw.strip()}
+                data = clean_response_table_name(data, tenant_prefix)
                 self._respond_json(200, data)
             except Exception as e:
                 self._respond_json(500, {"error": f"Query execution error: {str(e)}"})
@@ -499,16 +599,19 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
             table = payload.get("table", "rides").strip()
             item = payload.get("payload", "").strip()
 
-            if not TABLE_NAME_REGEX.match(table):
-                self._respond_json(400, {"error": "Invalid table name format"})
+            if not SAFE_TABLE_REGEX.match(table) or table.startswith("u_") or table.startswith("_") or table.startswith("sys_"):
+                self._respond_json(400, {"error": "Invalid table name. Only alphanumeric characters allowed, cannot start with 'u_' or '_'"})
                 return
 
             if not item:
                 self._respond_json(400, {"error": "Missing 'payload' parameter"})
                 return
 
+            tenant_prefix, _ = get_tenant(self)
+            target_table = f"{tenant_prefix}{table}"
+
             try:
-                raw = execute_tcp(f"PUSH {table} {item}", timeout=5.0)
+                raw = execute_tcp(f"PUSH {target_table} {item}", timeout=5.0)
                 row_id = raw.strip().lstrip(":")
                 self._respond_json(200, {"ok": True, "table": table, "rowId": row_id, "raw": raw.strip()})
             except Exception as e:
@@ -542,9 +645,11 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "7860"))
-    print(f"[SECURITY] SynapseDB Hardened Gateway with Backend Auth listening on http://0.0.0.0:{port}")
+    print(f"[SECURITY] SynapseDB Hardened Gateway with Multi-Tenant Partitioning listening on http://0.0.0.0:{port}")
     print(f"   - Rate Limit: {RATE_LIMIT_MAX} req/min (Auth: 15 req/min)")
     print(f"   - Max Payload: {MAX_PAYLOAD_BYTES / 1024:.1f} KB")
+    print(f"   - Multi-Tenancy: Isolated user partitions with automatic prefix routing")
     print(f"   - Endpoints: /health, /query, /push, /schema, /auth/register, /auth/login, /auth/me, /auth/demo")
+    ensure_demo_data_seeded()
     server = HTTPServer(("0.0.0.0", port), SynapseGatewayHandler)
     server.serve_forever()
