@@ -90,4 +90,37 @@ mod tests {
             assert_eq!(id, (i as u64) + 1);
         }
     }
+
+    #[test]
+    fn test_repair_wal_torn_write_and_fsync() {
+        let dir = tempdir().unwrap();
+        let wal_path = dir.path().join("corrupted.wal");
+        let wal = WalWriter::open(&wal_path, WalConfig::default()).unwrap();
+
+        wal.append(b"valid-record-1").unwrap();
+        wal.append(b"valid-record-2").unwrap();
+        drop(wal);
+
+        // Simulate a torn write by appending incomplete garbage bytes to the end of WAL
+        {
+            use std::io::Write;
+            let mut file = std::fs::OpenOptions::new().append(true).open(&wal_path).unwrap();
+            file.write_all(b"torn-partial-header-data").unwrap();
+            file.flush().unwrap();
+        }
+
+        // repair_wal_to_last_valid should truncate the corruption and sync durable state
+        let recovered_count = repair_wal_to_last_valid(&wal_path).unwrap();
+        assert_eq!(recovered_count, 2);
+
+        // Verify the temporary file is cleaned up after rename
+        let tmp_path = wal_path.with_extension("repaired.tmp");
+        assert!(!tmp_path.exists());
+
+        // Verify recovered records are intact
+        let records = recover_records(&wal_path).unwrap();
+        assert_eq!(records.len(), 2);
+        assert_eq!(records[0].payload, b"valid-record-1");
+        assert_eq!(records[1].payload, b"valid-record-2");
+    }
 }

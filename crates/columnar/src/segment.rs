@@ -33,12 +33,24 @@ impl SegmentManager {
                 .write(true)
                 .truncate(true)
                 .open(&temp_path)?;
-            let writer = BufWriter::new(file);
-            bincode::serialize_into(writer, chunk)
+            let mut writer = BufWriter::new(file);
+            bincode::serialize_into(&mut writer, chunk)
                 .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            use std::io::Write;
+            writer.flush()?;
+            let file = writer.into_inner().map_err(|e| e.into_error())?;
+            file.sync_all()?;
         }
 
-        std::fs::rename(temp_path, &path)?;
+        std::fs::rename(&temp_path, &path)?;
+
+        #[cfg(unix)]
+        if let Some(parent) = path.parent() {
+            if let Ok(dir) = File::open(parent) {
+                let _ = dir.sync_all();
+            }
+        }
+
         Ok(path)
     }
 

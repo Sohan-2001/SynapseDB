@@ -35,11 +35,32 @@ pub fn get_highest_row_id<P: AsRef<Path>>(path: P) -> Result<Option<u64>, WalErr
 
 /// Truncate any corrupt/torn write at the end of the log to restore cleanly.
 pub fn repair_wal_to_last_valid<P: AsRef<Path>>(path: P) -> Result<usize, WalError> {
-    let records = recover_records(&path)?;
+    let path = path.as_ref();
+    if !path.exists() {
+        return Ok(0);
+    }
+
+    let file = File::open(path)?;
+    let mut reader = BufReader::new(file);
+    let mut records = Vec::new();
+
+    loop {
+        match WalRecord::decode(&mut reader) {
+            Ok(Some(record)) => records.push(record),
+            Ok(None) => break,
+            Err(WalError::Io(e)) => return Err(WalError::Io(e)),
+            Err(_) => {
+                // Incomplete write, CRC mismatch, or corrupt header at the end of WAL.
+                // Stop at the last valid record to repair the log.
+                break;
+            }
+        }
+    }
+
     let count = records.len();
 
     // Re-write clean records to temporary file and atomically replace
-    let temp_path = path.as_ref().with_extension("repaired.tmp");
+    let temp_path = path.with_extension("repaired.tmp");
     {
         let file = OpenOptions::new()
             .create(true)
@@ -52,8 +73,18 @@ pub fn repair_wal_to_last_valid<P: AsRef<Path>>(path: P) -> Result<usize, WalErr
         }
         use std::io::Write;
         writer.flush()?;
+        let file = writer.into_inner().map_err(|e| e.into_error())?;
+        file.sync_all()?;
     }
 
-    std::fs::rename(temp_path, path)?;
+    std::fs::rename(&temp_path, path)?;
+
+    #[cfg(unix)]
+    if let Some(parent) = path.parent() {
+        if let Ok(dir) = std::fs::File::open(parent) {
+            let _ = dir.sync_all();
+        }
+    }
+
     Ok(count)
 }

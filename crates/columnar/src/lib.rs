@@ -81,4 +81,31 @@ mod tests {
         assert_eq!(disk_segments.len(), 1);
         assert_eq!(disk_segments[0].row_count, 3);
     }
+
+    #[test]
+    fn test_flush_chunk_durability_and_reload() {
+        let dir = tempdir().unwrap();
+        let sm = SegmentManager::new(dir.path()).unwrap();
+
+        let mut chunk = ColumnarChunk::new(1, 100);
+        let mut vec = ColumnVector::new(PhysicalType::Float64, 2);
+        vec.push_value(&CatalogValue::Float64(99.5));
+        vec.push_value(&CatalogValue::Float64(149.9));
+        chunk.columns.insert(0, vec);
+        chunk.row_count = 2;
+
+        let segment_path = sm.flush_chunk("products", &chunk).unwrap();
+        assert!(segment_path.exists());
+
+        // Verify temporary file is cleaned up after atomic rename
+        let tmp_path = segment_path.with_extension("tmp");
+        assert!(!tmp_path.exists());
+
+        // Load chunk back from disk and verify contents
+        let loaded = sm.load_chunk(&segment_path).unwrap();
+        assert_eq!(loaded.chunk_id, 1);
+        assert_eq!(loaded.row_count, 2);
+        let col = loaded.get_column_vector(0).unwrap();
+        assert_eq!(col.len(), 2);
+    }
 }

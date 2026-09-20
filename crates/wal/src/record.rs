@@ -63,12 +63,20 @@ impl WalRecord {
 
     pub fn decode<R: Read>(reader: &mut R) -> Result<Option<Self>, WalError> {
         let mut header_buf = [0u8; WAL_HEADER_SIZE];
-        match reader.read_exact(&mut header_buf) {
-            Ok(()) => {}
-            Err(e) if e.kind() == io::ErrorKind::UnexpectedEof => {
-                return Ok(None);
+        let mut bytes_read = 0;
+        while bytes_read < WAL_HEADER_SIZE {
+            match reader.read(&mut header_buf[bytes_read..]) {
+                Ok(0) => {
+                    if bytes_read == 0 {
+                        return Ok(None);
+                    } else {
+                        return Err(WalError::UnexpectedEof);
+                    }
+                }
+                Ok(n) => bytes_read += n,
+                Err(ref e) if e.kind() == io::ErrorKind::Interrupted => continue,
+                Err(e) => return Err(WalError::Io(e)),
             }
-            Err(e) => return Err(WalError::Io(e)),
         }
 
         let mut slice = &header_buf[..];
