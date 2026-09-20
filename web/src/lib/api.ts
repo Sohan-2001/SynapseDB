@@ -64,6 +64,17 @@ export async function pingHealth(baseUrl = getApiBaseUrl()): Promise<{ ok: boole
   }
 }
 
+export async function fetchEngineInfo(baseUrl = getApiBaseUrl()): Promise<{ ok: boolean; info?: any }> {
+  try {
+    const res = await fetch(`${baseUrl}/info`, { method: "GET" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const info = await res.json();
+    return { ok: true, info };
+  } catch {
+    return { ok: false };
+  }
+}
+
 export async function fetchSchema(table = "", baseUrl = getApiBaseUrl()): Promise<SchemaResponse> {
   const url = table ? `${baseUrl}/schema?table=${encodeURIComponent(table)}` : `${baseUrl}/schema`;
   const res = await fetch(url);
