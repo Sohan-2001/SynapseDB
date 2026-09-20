@@ -1,0 +1,26 @@
+# SynapseDB
+
+> Sub-millisecond durable single-row writes meet zero-DDL vectorized columnar analytics.
+
+SynapseDB is an open-source, hybrid transactional-analytical database engine written in Rust. It solves the architectural gap between analytical bulk-load engines (like DuckDB) and transactional document stores (like MongoDB):
+
+1. **Sub-Millisecond Durable Single-Row Writes (`< 1 ms`)**: Synchronously commits individual row mutations with CRC32 verification and hardware `fsync` write barriers to an append-only Write-Ahead Log (WAL). Unlike DuckDB, which is optimized for bulk batch loads, SynapseDB delivers high-throughput concurrent single-row transactional ingestion.
+2. **Zero-DDL Columnar Analytics**: Ingests arbitrary JSON documents, JSON arrays, and key-value logs without writing `CREATE TABLE` or managing schema migrations. In-memory micro-batch coordinators automatically infer types, widen numeric schemas, and vectorize data into Arrow-compatible columnar vectors.
+3. **Vectorized SIMD Queries & Zone-Map Pruning**: Scans only requested column vectors with chunk-level min/max zone map pruning for microsecond mathematical aggregations (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`) in `< 50 μs`.
+4. **Deterministic CPU-Local Small Language Model (SLM)**: An in-process, deterministic query compiler that transforms natural language queries into verified SQL ASTs in microseconds. Unlike cloud LLMs, it incurs zero API cost, zero network latency, deterministic reproducibility, and zero data leakage.
+
+## Architecture
+
+- **`crates/wal`**: Append-only Write-Ahead Log with CRC32 frame checksums, atomic temp-file rename, POSIX directory sync, and automated torn-write truncation.
+- **`crates/catalog`**: Lock-free dynamic schema registry with automatic type widening (Int64 -> Float64) and canonical synonym resolution (e.g. `fare` -> `amount`).
+- **`crates/columnar`**: Vectorized in-memory MemTables and chunk segments with sparse min/max zone maps.
+- **`crates/engine`**: Vectorized analytical query engine with zero-copy column projections and deterministic aggregations.
+- **`crates/slm`**: Deterministic CPU query planner and schema extractor.
+- **`crates/server`**: Tokio-powered multi-client TCP wire protocol server (Redis/RESP inspired).
+
+## Key Links
+
+- [Website & Web Studio](https://synapsedb.vercel.app): Live interactive playground and visual data browser.
+- [GitHub Repository](https://github.com/Sohan-2001/SynapseDB): Source code, tests, and documentation.
+- [Full Technical Specification](https://synapsedb.vercel.app/llms-full.txt): Complete architectural details for LLM agents.
+- [Syntax & Rules](https://github.com/Sohan-2001/SynapseDB/blob/main/SYNTAX_RULES.md): Input formats and query syntax.
