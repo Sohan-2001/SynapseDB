@@ -22,9 +22,14 @@ import {
   Menu,
   X,
   ArrowLeft,
+  ArrowRight,
   LayoutDashboard,
+  LogOut,
+  User as UserIcon,
 } from "lucide-react";
 import LandingPage from "@/components/LandingPage";
+import AuthModal from "@/components/AuthModal";
+import { getCurrentUser, signOut, User } from "@/lib/auth";
 import {
   getApiBaseUrl,
   setCustomApiUrl,
@@ -41,6 +46,13 @@ export default function SynapsePlayground() {
   const [currentView, setCurrentView] = useState<"landing" | "studio">("landing");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"query" | "browser" | "ingest" | "docs">("query");
+
+  // Auth State
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<"signin" | "signup">("signup");
+  const [authPrompt, setAuthPrompt] = useState("Create a free account or sign in to test the interactive playground.");
+  const [pendingTab, setPendingTab] = useState<"query" | "browser" | "ingest" | "docs" | null>(null);
   const [apiUrl, setApiUrl] = useState("");
   const [showConfig, setShowConfig] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -88,12 +100,50 @@ export default function SynapsePlayground() {
   }
 
   useEffect(() => {
+    setCurrentUser(getCurrentUser());
     const savedUrl = getApiBaseUrl();
     setApiUrl(savedUrl);
     checkHealth(savedUrl);
     const interval = setInterval(() => checkHealth(savedUrl), 8000);
     return () => clearInterval(interval);
   }, []);
+
+  function handleOpenStudio(tab: "query" | "browser" | "ingest" | "docs" = "query") {
+    if (!currentUser) {
+      setPendingTab(tab);
+      setAuthPrompt("Please create an account or sign in to test the interactive playground.");
+      setAuthModalTab("signup");
+      setAuthModalOpen(true);
+      return;
+    }
+    setActiveTab(tab);
+    setCurrentView("studio");
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleAuthSuccess(user: User) {
+    setCurrentUser(user);
+    showToast(`Welcome back, ${user.name}!`, "success");
+    if (pendingTab) {
+      setActiveTab(pendingTab);
+      setCurrentView("studio");
+      setPendingTab(null);
+    } else {
+      setCurrentView("studio");
+    }
+    setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleSignOut() {
+    signOut();
+    setCurrentUser(null);
+    setCurrentView("landing");
+    setMobileMenuOpen(false);
+    showToast("Signed out successfully", "info");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   async function checkHealth(url = apiUrl) {
     const res = await pingHealth(url);
@@ -311,23 +361,241 @@ export default function SynapsePlayground() {
 
   if (currentView === "landing") {
     return (
-      <div className="min-h-screen bg-[#FAFAF9] text-[#111827] flex flex-col font-sans">
+      <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
+        {/* Landing Top Navbar */}
+        <header className="border-b border-slate-200 bg-white/95 backdrop-blur px-4 sm:px-6 py-3 sticky top-0 z-40 shadow-2xs">
+          <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
+            
+            {/* Logo */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="flex items-center gap-2 group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
+                  <Zap className="w-4 h-4 text-white fill-current" />
+                </div>
+                <span className="font-extrabold text-lg tracking-tight text-slate-950">SynapseDB</span>
+              </button>
+
+              {/* Status Indicator */}
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs">
+                <div className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                <span className="text-slate-600 font-medium">{connected ? "Cloud Engine Online" : "Connecting..."}</span>
+                {pingLatency !== null && <span className="text-slate-400 text-[11px]">({pingLatency} ms)</span>}
+              </div>
+            </div>
+
+            {/* Desktop Nav Links */}
+            <nav className="hidden md:flex items-center gap-1 text-xs font-semibold text-slate-600">
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
+              >
+                Overview
+              </button>
+              <a
+                href="#demo-sandbox"
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
+              >
+                Live Demo
+              </a>
+              <button
+                onClick={() => handleOpenStudio("query")}
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition"
+              >
+                Playground Studio
+              </button>
+              <a
+                href="https://github.com/Sohan-2001/SynapseDB"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-lg hover:text-slate-950 hover:bg-slate-100 transition flex items-center gap-1"
+              >
+                <span>GitHub</span>
+                <ExternalLink className="w-3 h-3 text-slate-400" />
+              </a>
+            </nav>
+
+            {/* Auth Controls */}
+            <div className="flex items-center gap-2">
+              {currentUser ? (
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200 text-xs text-blue-900 font-semibold">
+                    <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold uppercase">
+                      {currentUser.name.charAt(0)}
+                    </div>
+                    <span className="hidden sm:inline max-w-[120px] truncate">{currentUser.name}</span>
+                  </div>
+                  <button
+                    onClick={() => handleOpenStudio("query")}
+                    className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition flex items-center gap-1.5"
+                  >
+                    <span>Open Studio</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    title="Sign Out"
+                    className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 border border-slate-200 transition"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      setAuthPrompt("Sign in to your SynapseDB account to access your studio.");
+                      setAuthModalTab("signin");
+                      setAuthModalOpen(true);
+                    }}
+                    className="min-h-[38px] px-3 py-1.5 rounded-xl text-slate-700 hover:text-slate-950 hover:bg-slate-100 text-xs font-semibold transition"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthPrompt("Create your free account to access the interactive playground.");
+                      setAuthModalTab("signup");
+                      setAuthModalOpen(true);
+                    }}
+                    className="min-h-[38px] px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+                  >
+                    Create Account
+                  </button>
+                </div>
+              )}
+
+              {/* Mobile Menu Toggle */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden min-h-[38px] min-w-[38px] flex items-center justify-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
+            </div>
+
+          </div>
+
+          {/* Mobile Drawer */}
+          {mobileMenuOpen && (
+            <div className="md:hidden mt-3 pt-3 border-t border-slate-200 flex flex-col gap-2 pb-2">
+              <div className="px-2 py-1.5 rounded-lg bg-slate-50 text-xs flex items-center justify-between text-slate-600">
+                <span className="font-medium">Cloud Engine:</span>
+                <span className="font-semibold text-emerald-600">{connected ? "Online" : "Connecting"}</span>
+              </div>
+
+              {currentUser && (
+                <div className="px-3 py-2 rounded-lg bg-blue-50 text-xs text-blue-900 font-semibold flex items-center justify-between">
+                  <span>Signed in as {currentUser.name}</span>
+                  <button onClick={handleSignOut} className="text-red-600 hover:underline">
+                    Sign Out
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800"
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => handleOpenStudio("query")}
+                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 flex items-center justify-between"
+              >
+                <span>Launch Playground Studio</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleOpenStudio("browser")}
+                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800"
+              >
+                Data Browser
+              </button>
+              <button
+                onClick={() => handleOpenStudio("ingest")}
+                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800"
+              >
+                Ingestion Lab
+              </button>
+              <a
+                href="https://github.com/Sohan-2001/SynapseDB"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-100 text-slate-800 flex items-center justify-between"
+              >
+                <span>GitHub Repository</span>
+                <ExternalLink className="w-4 h-4 text-slate-400" />
+              </a>
+
+              {!currentUser && (
+                <div className="pt-2 border-t border-slate-200 flex flex-col gap-2">
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setAuthPrompt("Sign in to your SynapseDB account.");
+                      setAuthModalTab("signin");
+                      setAuthModalOpen(true);
+                    }}
+                    className="w-full py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 text-center hover:bg-slate-100"
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setAuthPrompt("Create your free account to access the interactive playground.");
+                      setAuthModalTab("signup");
+                      setAuthModalOpen(true);
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold text-center hover:bg-blue-700"
+                  >
+                    Create Free Account
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </header>
+
+        {/* Landing Page Content */}
         <LandingPage
-          onLaunchStudio={(tab) => {
-            if (tab) setActiveTab(tab);
-            setCurrentView("studio");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
+          onLaunchStudio={handleOpenStudio}
           apiUrl={apiUrl}
           connected={connected}
           pingLatency={pingLatency}
         />
+
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialTab={authModalTab}
+          onAuthSuccess={handleAuthSuccess}
+          promptMessage={authPrompt}
+        />
+
+        {/* Auth Modal */}
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialTab={authModalTab}
+          onAuthSuccess={handleAuthSuccess}
+          promptMessage={authPrompt}
+        />
+
         {/* Toast Notifications */}
         <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none">
           {toasts.map((t) => (
             <div
               key={t.id}
-              className={`toast-enter px-4 py-2.5 rounded border text-xs font-mono flex items-center gap-2 max-w-sm pointer-events-auto shadow-md ${
+              className={`toast-enter px-4 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-2 max-w-sm pointer-events-auto shadow-md ${
                 t.type === "success"
                   ? "bg-emerald-50 border-emerald-200 text-emerald-800"
                   : t.type === "error"
@@ -375,6 +643,12 @@ export default function SynapsePlayground() {
           </div>
 
           <div className="flex items-center gap-2.5">
+            {currentUser && (
+              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="max-w-[100px] truncate">{currentUser.name}</span>
+              </div>
+            )}
             <button
               onClick={seedSampleData}
               disabled={isSeeding}
@@ -390,8 +664,18 @@ export default function SynapsePlayground() {
               className="px-3 py-1.5 rounded bg-[#111827] hover:bg-slate-800 text-white font-semibold text-xs transition flex items-center gap-1.5"
             >
               <ArrowLeft className="w-3 h-3" />
-              <span>[ Return to Overview ]</span>
+              <span>Return to Overview</span>
             </button>
+            {currentUser && (
+              <button
+                onClick={handleSignOut}
+                title="Sign Out"
+                className="px-2.5 py-1.5 rounded bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 border border-slate-200 transition text-xs font-semibold flex items-center gap-1"
+              >
+                <LogOut className="w-3 h-3" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
