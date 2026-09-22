@@ -106,10 +106,26 @@ export async function verifySession(apiUrl: string): Promise<User | null> {
         Authorization: `Bearer ${cached.token}`,
       },
     });
-    if (!res.ok) {
-      clearSession();
-      return null;
+
+    if (res.status === 401) {
+      try {
+        const data = await res.json();
+        if (data.status === "error") {
+          clearSession();
+          return null;
+        }
+      } catch {
+        clearSession();
+        return null;
+      }
     }
+
+    if (!res.ok) {
+      // Backend is cold-booting / waking up from Heroku sleep (502/503/504)
+      // Retain cached session so user is not logged out during wake-up
+      return cached;
+    }
+
     const data = await res.json();
     if (data.status === "success" && data.user) {
       const updated: User = {
@@ -121,9 +137,9 @@ export async function verifySession(apiUrl: string): Promise<User | null> {
       saveSession(updated);
       return updated;
     }
-    clearSession();
-    return null;
+    return cached;
   } catch {
+    // Network error or timeout during cold-boot wake-up: keep cached user
     return cached;
   }
 }

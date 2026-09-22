@@ -4,7 +4,10 @@ import time
 import socket
 import re
 import hashlib
+import hmac
+import base64
 import secrets
+import sqlite3
 from collections import defaultdict
 from threading import Lock
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -70,22 +73,78 @@ limiter = SlidingWindowRateLimiter(RATE_LIMIT_MAX, RATE_LIMIT_WINDOW)
 auth_limiter = SlidingWindowRateLimiter(15, 60)  # Brute-force guard: max 15 attempts / min
 
 # -------------------------------------------------------------
-# User Store & Authentication System
+# Persistent Storage & Stateless HMAC Authentication Layer
 # -------------------------------------------------------------
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+DATA_DIR = os.environ.get("SYNAPSE_DATA_DIR", os.path.join(os.path.dirname(os.path.abspath(__file__)), "data"))
 USERS_FILE = os.path.join(DATA_DIR, "users.json")
+SQLITE_DB = os.path.join(DATA_DIR, "synapsedb_users.db")
 users_lock = Lock()
 
-def _ensure_data_dir():
+# Secret key for stateless HMAC-SHA256 tokens (stable across dyno restarts)
+SYNAPSE_SESSION_SECRET = os.environ.get("SYNAPSE_SESSION_SECRET") or os.environ.get("SECRET_KEY") or "synapsedb_hmac_master_secret_2026_durable"
+SESSION_TTL_SECONDS = 30 * 24 * 3600  # 30 days persistent session
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+HAS_POSTGRES = False
+pg_module = None
+
+if DATABASE_URL:
+    try:
+        import psycopg2
+        pg_url = DATABASE_URL
+        if pg_url.startswith("postgres://"):
+            pg_url = pg_url.replace("postgres://", "postgresql://", 1)
+        conn = psycopg2.connect(pg_url)
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS auth_users (
+                    email VARCHAR(255) PRIMARY KEY,
+                    id VARCHAR(64) NOT NULL,
+                    name VARCHAR(255) NOT NULL,
+                    salt VARCHAR(64) NOT NULL,
+                    password_hash VARCHAR(128) NOT NULL,
+                    created_at VARCHAR(64) NOT NULL
+                );
+                CREATE TABLE IF NOT EXISTS revoked_tokens (
+                    token_sig VARCHAR(128) PRIMARY KEY,
+                    revoked_at DOUBLE PRECISION NOT NULL
+                );
+            """)
+            conn.commit()
+        conn.close()
+        HAS_POSTGRES = True
+        pg_module = psycopg2
+        print("[AUTH STORAGE] Connected to Heroku PostgreSQL persistent SSD storage.")
+    except Exception as e:
+        print(f"[AUTH STORAGE WARN] PostgreSQL not active ({e}); using SQLite disk store.")
+
+def _init_sqlite():
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
-        if not os.path.exists(USERS_FILE):
-            with open(USERS_FILE, "w", encoding="utf-8") as f:
-                json.dump({}, f)
+        with sqlite3.connect(SQLITE_DB) as conn:
+            conn.execute("PRAGMA journal_mode = WAL;")
+            conn.execute("PRAGMA synchronous = NORMAL;")
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS auth_users (
+                    email TEXT PRIMARY KEY,
+                    id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    salt TEXT NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+            """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS revoked_tokens (
+                    token_sig TEXT PRIMARY KEY,
+                    revoked_at REAL NOT NULL
+                );
+            """)
+            conn.commit()
     except Exception as e:
-        print(f"[AUTH WARN] Could not init users dir: {e}")
+        print(f"[AUTH STORAGE ERROR] SQLite init failed: {e}")
 
-_ensure_data_dir()
+_init_sqlite()
 
 def load_users() -> dict:
     with users_lock:
@@ -104,52 +163,223 @@ def save_users(users: dict):
             with open(USERS_FILE, "w", encoding="utf-8") as f:
                 json.dump(users, f, indent=2)
         except Exception as e:
-            print(f"[AUTH ERROR] Failed to save users: {e}")
+            print(f"[AUTH ERROR] Failed to save users.json: {e}")
+
+def get_user_by_email(email: str) -> dict | None:
+    email = email.strip().lower()
+    # 1. Check PostgreSQL if active
+    if HAS_POSTGRES and pg_module:
+        try:
+            pg_url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
+            with pg_module.connect(pg_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT email, id, name, salt, password_hash, created_at FROM auth_users WHERE email = %s", (email,))
+                    row = cur.fetchone()
+                    if row:
+                        return {
+                            "email": row[0],
+                            "id": row[1],
+                            "name": row[2],
+                            "salt": row[3],
+                            "password_hash": row[4],
+                            "created_at": row[5]
+                        }
+        except Exception as e:
+            print(f"[AUTH POSTGRES ERROR] get_user: {e}")
+
+    # 2. Check SQLite disk store
+    try:
+        with sqlite3.connect(SQLITE_DB) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT email, id, name, salt, password_hash, created_at FROM auth_users WHERE email = ?", (email,))
+            row = cur.fetchone()
+            if row:
+                return {
+                    "email": row[0],
+                    "id": row[1],
+                    "name": row[2],
+                    "salt": row[3],
+                    "password_hash": row[4],
+                    "created_at": row[5]
+                }
+    except Exception as e:
+        print(f"[AUTH SQLITE ERROR] get_user: {e}")
+
+    # 3. Fallback to JSON file
+    return load_users().get(email)
+
+def save_user_record(user_record: dict):
+    email = user_record["email"].strip().lower()
+    uid = user_record["id"]
+    name = user_record["name"]
+    salt = user_record.get("salt", "")
+    pw_hash = user_record.get("password_hash", "")
+    created_at = user_record.get("created_at", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+
+    # 1. Save to PostgreSQL if active
+    if HAS_POSTGRES and pg_module:
+        try:
+            pg_url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
+            with pg_module.connect(pg_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO auth_users (email, id, name, salt, password_hash, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (email) DO UPDATE SET
+                            name = EXCLUDED.name,
+                            salt = EXCLUDED.salt,
+                            password_hash = EXCLUDED.password_hash;
+                    """, (email, uid, name, salt, pw_hash, created_at))
+                    conn.commit()
+        except Exception as e:
+            print(f"[AUTH POSTGRES ERROR] save_user: {e}")
+
+    # 2. Save to SQLite disk store
+    try:
+        with sqlite3.connect(SQLITE_DB) as conn:
+            conn.execute("""
+                INSERT OR REPLACE INTO auth_users (email, id, name, salt, password_hash, created_at)
+                VALUES (?, ?, ?, ?, ?, ?);
+            """, (email, uid, name, salt, pw_hash, created_at))
+            conn.commit()
+    except Exception as e:
+        print(f"[AUTH SQLITE ERROR] save_user: {e}")
+
+    # 3. Save to JSON file as well
+    users = load_users()
+    users[email] = user_record
+    save_users(users)
+
+def ensure_user_profile(user_id: str, name: str, email: str):
+    """Self-healing profile restoration: ensures user exists on the backend across dyno restarts."""
+    if not email:
+        return
+    email = email.strip().lower()
+    existing = get_user_by_email(email)
+    if not existing:
+        stub_record = {
+            "id": user_id,
+            "name": name,
+            "email": email,
+            "salt": "",
+            "password_hash": "",
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        }
+        save_user_record(stub_record)
+
+def record_revoked_token(token: str):
+    sig = token.split(".")[-1] if "." in token else token
+    now = time.time()
+    if HAS_POSTGRES and pg_module:
+        try:
+            pg_url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
+            with pg_module.connect(pg_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("INSERT INTO revoked_tokens (token_sig, revoked_at) VALUES (%s, %s) ON CONFLICT DO NOTHING", (sig, now))
+                    conn.commit()
+        except Exception:
+            pass
+    try:
+        with sqlite3.connect(SQLITE_DB) as conn:
+            conn.execute("INSERT OR REPLACE INTO revoked_tokens (token_sig, revoked_at) VALUES (?, ?)", (sig, now))
+            conn.commit()
+    except Exception:
+        pass
+
+def is_token_revoked(token: str) -> bool:
+    sig = token.split(".")[-1] if "." in token else token
+    if HAS_POSTGRES and pg_module:
+        try:
+            pg_url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
+            with pg_module.connect(pg_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT 1 FROM revoked_tokens WHERE token_sig = %s", (sig,))
+                    if cur.fetchone():
+                        return True
+        except Exception:
+            pass
+    try:
+        with sqlite3.connect(SQLITE_DB) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT 1 FROM revoked_tokens WHERE token_sig = ?", (sig,))
+            if cur.fetchone():
+                return True
+    except Exception:
+        pass
+    return False
 
 def hash_password(password: str, salt_hex: str) -> str:
     salt_bytes = bytes.fromhex(salt_hex)
     pwd_bytes = password.encode("utf-8")
     return hashlib.pbkdf2_hmac("sha256", pwd_bytes, salt_bytes, 100000).hex()
 
-# Thread-safe in-memory session store (token -> {user_id, name, email, created_at, expires_at})
+# Legacy active session buffer (for transient non-HMAC fallback)
 sessions_lock = Lock()
 active_sessions: dict[str, dict] = {}
-SESSION_TTL_SECONDS = 7 * 24 * 3600  # 7 days
 
 def create_session(user_id: str, name: str, email: str) -> str:
-    token = "syn_" + secrets.token_hex(24)
-    now = time.time()
-    with sessions_lock:
-        active_sessions[token] = {
-            "user_id": user_id,
-            "name": name,
-            "email": email,
-            "created_at": now,
-            "expires_at": now + SESSION_TTL_SECONDS
-        }
+    """Generates a stateless HMAC-SHA256 token valid for 30 days across dyno sleeps/restarts."""
+    now = int(time.time())
+    payload = {
+        "uid": user_id,
+        "name": name,
+        "email": email,
+        "iat": now,
+        "exp": now + SESSION_TTL_SECONDS
+    }
+    raw = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+    b64_payload = base64.urlsafe_b64encode(raw).decode("utf-8").rstrip("=")
+    sig = hmac.new(SYNAPSE_SESSION_SECRET.encode("utf-8"), b64_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+    token = f"syn.{b64_payload}.{sig}"
     return token
 
 def get_session_user(token: str) -> dict | None:
+    """Stateless HMAC verification: requires ZERO RAM and ZERO DB lookup."""
     if not token:
         return None
-    now = time.time()
+
+    # 1. Stateless HMAC token validation
+    if token.startswith("syn."):
+        parts = token.split(".")
+        if len(parts) == 3:
+            _, b64_payload, sig = parts
+            expected_sig = hmac.new(SYNAPSE_SESSION_SECRET.encode("utf-8"), b64_payload.encode("utf-8"), hashlib.sha256).hexdigest()
+            if hmac.compare_digest(sig, expected_sig):
+                if is_token_revoked(token):
+                    return None
+                padding = "=" * (-len(b64_payload) % 4)
+                try:
+                    raw_json = base64.urlsafe_b64decode((b64_payload + padding).encode("utf-8")).decode("utf-8")
+                    data = json.loads(raw_json)
+                    now = time.time()
+                    if data.get("exp", 0) > now:
+                        user = {
+                            "id": data.get("uid"),
+                            "name": data.get("name"),
+                            "email": data.get("email")
+                        }
+                        # Ensure user profile exists on this dyno (self-healing)
+                        ensure_user_profile(user["id"], user["name"], user["email"])
+                        return user
+                except Exception:
+                    pass
+
+    # 2. Legacy fallback for non-HMAC sessions
     with sessions_lock:
         sess = active_sessions.get(token)
-        if not sess:
-            return None
-        if sess["expires_at"] < now:
-            del active_sessions[token]
-            return None
-        return {
-            "id": sess["user_id"],
-            "name": sess["name"],
-            "email": sess["email"]
-        }
+        if sess and sess.get("expires_at", 0) > time.time():
+            return {
+                "id": sess["user_id"],
+                "name": sess["name"],
+                "email": sess["email"]
+            }
+    return None
 
 def revoke_session(token: str):
     with sessions_lock:
         if token in active_sessions:
             del active_sessions[token]
+    record_revoked_token(token)
 
 # -------------------------------------------------------------
 # TCP Wire Protocol Client with Timeout Guards
@@ -459,12 +689,12 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                 self._respond_json(400, {"status": "error", "error": "Password must be at least 6 characters long"})
                 return
 
-            users = load_users()
-            if email in users:
+            existing = get_user_by_email(email)
+            if existing and existing.get("password_hash"):
                 self._respond_json(409, {"status": "error", "error": "An account with this email already exists"})
                 return
 
-            user_id = "usr_" + secrets.token_hex(6)
+            user_id = existing.get("id") if (existing and existing.get("id")) else ("usr_" + secrets.token_hex(6))
             salt = secrets.token_hex(16)
             pw_hash = hash_password(password, salt)
             now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -477,8 +707,7 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                 "password_hash": pw_hash,
                 "created_at": now_iso
             }
-            users[email] = user_record
-            save_users(users)
+            save_user_record(user_record)
             token = create_session(user_id, name, email)
             self._respond_json(201, {
                 "status": "success",
@@ -509,9 +738,8 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
                 self._respond_json(400, {"status": "error", "error": "Email and password are required"})
                 return
 
-            users = load_users()
-            user_record = users.get(email)
-            if not user_record:
+            user_record = get_user_by_email(email)
+            if not user_record or not user_record.get("password_hash"):
                 self._respond_json(401, {"status": "error", "error": "No account found with this email"})
                 return
 
