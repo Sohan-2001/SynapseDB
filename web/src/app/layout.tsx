@@ -45,7 +45,9 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
     shortcut: "/icon.svg",
     apple: "/icon.svg",
   },
@@ -57,6 +59,15 @@ export const metadata: Metadata = {
     siteName: "SynapseDB",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "SynapseDB — Sub-Millisecond Durable Writes & Zero-DDL Columnar Analytics",
+        type: "image/png",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -64,6 +75,7 @@ export const metadata: Metadata = {
     description:
       "Ingest single JSON rows at sub-millisecond speeds with synchronous fsync durability. Query with vectorized SIMD columnar analytics in microseconds.",
     creator: "@Sohan_2001",
+    images: ["/twitter-image"],
   },
   alternates: {
     canonical: "https://synapsedb.vercel.app",
