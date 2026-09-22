@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, Lock, Mail, User as UserIcon, Eye, EyeOff, Zap, Sparkles, ArrowRight } from "lucide-react";
 import { signUp, signIn, demoLogin, User } from "@/lib/auth";
+import SynapseLogo from "@/components/SynapseLogo";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -88,9 +89,7 @@ export default function AuthModal({
         {/* Modal Header */}
         <div className="p-5 sm:p-6 bg-slate-50/90 border-b border-slate-200 flex items-start justify-between gap-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-black border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shadow-xs">
-              <Zap className="w-5 h-5 text-emerald-400 fill-current" />
-            </div>
+            <SynapseLogo className="w-9 h-9 shadow-xs shrink-0" />
             <div>
               <h3 className="text-base font-bold text-slate-950">
                 {tab === "signup" ? "Create Your Account" : "Welcome Back"}

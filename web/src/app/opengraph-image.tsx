@@ -58,22 +58,24 @@ export default async function Image() {
             marginBottom: "32px",
           }}
         >
-          {/* Icon circle */}
-          <div
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "50%",
-              background: "#000000",
-              border: "3px solid rgba(16, 185, 129, 0.5)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 0 40px rgba(16, 185, 129, 0.3)",
-            }}
-          >
-            <span style={{ fontSize: "40px", color: "#34D399" }}>⚡</span>
-          </div>
+          {/* Logo Brand Mark */}
+          <svg width="80" height="80" viewBox="0 0 64 64" fill="none">
+            <rect width="64" height="64" rx="16" fill="#0B0F19" stroke="rgba(16, 185, 129, 0.6)" strokeWidth="2" />
+            <path d="M16 40 C16 35 48 35 48 40 L48 45 C48 50 16 50 16 45 Z" fill="#059669" opacity="0.85" />
+            <ellipse cx="32" cy="40" rx="16" ry="5" fill="#0B132B" stroke="#059669" strokeWidth="1.5" />
+            <path d="M16 29 C16 24 48 24 48 29 L48 34 C48 39 16 39 16 34 Z" fill="#10B981" opacity="0.9" />
+            <ellipse cx="32" cy="29" rx="16" ry="5" fill="#0E1E2E" stroke="#10B981" strokeWidth="1.5" />
+            <line x1="24" y1="28" x2="24" y2="35" stroke="#34D399" strokeWidth="1.2" strokeOpacity="0.6" />
+            <line x1="40" y1="28" x2="40" y2="35" stroke="#34D399" strokeWidth="1.2" strokeOpacity="0.6" />
+            <path d="M16 18 C16 13 48 13 48 18 L48 23 C48 28 16 28 16 23 Z" fill="#34D399" />
+            <ellipse cx="32" cy="18" rx="16" ry="5" fill="#132E27" stroke="#34D399" strokeWidth="1.5" />
+            <path d="M24 18 C34 21 28 27 38 29 C46 31 26 37 30 44" stroke="#6EE7B7" strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx="24" cy="18" r="2.5" fill="#ECFDF5" stroke="#10B981" strokeWidth="1.2" />
+            <circle cx="38" cy="29" r="2.5" fill="#ECFDF5" stroke="#34D399" strokeWidth="1.2" />
+            <circle cx="30" cy="44" r="2.5" fill="#ECFDF5" stroke="#059669" strokeWidth="1.2" />
+            <circle cx="42" cy="17" r="1.5" fill="#6EE7B7" opacity="0.9" />
+            <circle cx="20" cy="33" r="1.5" fill="#6EE7B7" opacity="0.8" />
+          </svg>
           <span
             style={{
               fontSize: "64px",

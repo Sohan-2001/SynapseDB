@@ -13,6 +13,7 @@ import {
 import LandingPage from "@/components/LandingPage";
 import AuthModal from "@/components/AuthModal";
 import PlaygroundStudio from "@/components/PlaygroundStudio";
+import SynapseLogo from "@/components/SynapseLogo";
 import { getCachedUser, verifySession, signOut, User } from "@/lib/auth";
 import {
   getApiBaseUrl,
@@ -114,9 +115,7 @@ export default function SynapsePlayground() {
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                 className="flex items-center gap-1.5 sm:gap-2 group shrink-0"
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shadow-xs group-hover:scale-105 transition shrink-0">
-                  <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 fill-current" />
-                </div>
+                <SynapseLogo className="w-7 h-7 sm:w-8 sm:h-8 group-hover:scale-105 transition shrink-0 shadow-xs" />
                 <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-950">SynapseDB</span>
               </button>
 

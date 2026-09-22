@@ -40,6 +40,7 @@ import {
   SchemaResponse
 } from "@/lib/api";
 import { User } from "@/lib/auth";
+import SynapseLogo from "@/components/SynapseLogo";
 
 interface PlaygroundStudioProps {
   apiUrl: string;
@@ -460,9 +461,7 @@ export default function PlaygroundStudio({
               onClick={onReturnToOverview}
               className="flex items-center gap-1.5 sm:gap-2 group transition focus:outline-none shrink-0"
             >
-              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shadow-xs group-hover:scale-105 transition shrink-0">
-                <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400 fill-current" />
-              </div>
+              <SynapseLogo className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-105 transition shrink-0 shadow-xs" />
               <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-950">
                 SynapseDB
               </span>
@@ -1608,9 +1607,7 @@ export default function PlaygroundStudio({
             {/* Health Cards Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="aurora-card p-5 shadow-md flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-black text-emerald-400 flex items-center justify-center font-bold text-lg shadow-xs">
-                  ⚡
-                </div>
+                <SynapseLogo className="w-10 h-10 shadow-xs shrink-0" />
                 <div>
                   <span className="text-[10px] uppercase font-semibold text-slate-400 block">Engine Version</span>
                   <strong className="text-sm font-bold text-slate-950">SynapseDB v0.1.0</strong>

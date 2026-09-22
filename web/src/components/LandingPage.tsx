@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { executeQuery, QueryResponse } from "@/lib/api";
 import Database3DHero from "@/components/Database3DHero";
+import SynapseLogo from "@/components/SynapseLogo";
 
 interface LandingPageProps {
   onLaunchStudio: (initialTab?: "query" | "browser" | "ingest" | "docs") => void;
@@ -263,7 +264,7 @@ export default function LandingPage({
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-900 font-semibold">
                     <th className="py-3.5 px-4 sm:px-6">Capability / Metric</th>
                     <th className="py-3.5 px-4 sm:px-6 bg-emerald-50/80 text-emerald-950 font-bold border-x border-emerald-200">
-                      ⚡ SynapseDB
+                      <span className="inline-flex items-center gap-1.5"><SynapseLogo className="w-4 h-4 shrink-0" /> SynapseDB</span>
                     </th>
                     <th className="py-3.5 px-4 sm:px-6 text-slate-700">DuckDB</th>
                     <th className="py-3.5 px-4 sm:px-6 text-slate-700">MongoDB</th>
@@ -855,9 +856,7 @@ export default function LandingPage({
       <footer className="border-t border-slate-200 bg-white py-8 safe-px text-xs text-slate-500">
         <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-black border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shadow-xs">
-              <Zap className="w-3.5 h-3.5 text-emerald-400 fill-current" />
-            </div>
+            <SynapseLogo className="w-7 h-7 shadow-xs shrink-0" />
             <span className="font-bold text-slate-950 text-sm">SynapseDB</span>
             <span>— Open-Source Real-Time Columnar Database</span>
           </div>
