@@ -109,6 +109,14 @@ if DATABASE_URL:
                     token_sig VARCHAR(128) PRIMARY KEY,
                     revoked_at DOUBLE PRECISION NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS synapse_backup_records (
+                    id SERIAL PRIMARY KEY,
+                    tenant_prefix VARCHAR(64) NOT NULL,
+                    table_name VARCHAR(64) NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at VARCHAR(64) NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_backup_table ON synapse_backup_records(tenant_prefix, table_name);
             """)
             conn.commit()
         conn.close()
@@ -140,6 +148,16 @@ def _init_sqlite():
                     revoked_at REAL NOT NULL
                 );
             """)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS synapse_backup_records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tenant_prefix TEXT NOT NULL,
+                    table_name TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+            """)
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_backup_table ON synapse_backup_records(tenant_prefix, table_name);")
             conn.commit()
     except Exception as e:
         print(f"[AUTH STORAGE ERROR] SQLite init failed: {e}")
@@ -407,6 +425,79 @@ def execute_tcp(cmd: str, timeout: float = 5.0) -> str:
     return data.decode("utf-8", errors="ignore")
 
 # -------------------------------------------------------------
+# Write-Through Replay & Persistent Storage Recovery
+# -------------------------------------------------------------
+def backup_record(tenant_prefix: str, table_name: str, payload: str):
+    """Persists every PUSH into Heroku's persistent database for dyno sleep recovery."""
+    now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    if HAS_POSTGRES and pg_module:
+        try:
+            pg_url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
+            with pg_module.connect(pg_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO synapse_backup_records (tenant_prefix, table_name, payload, created_at)
+                        VALUES (%s, %s, %s, %s);
+                    """, (tenant_prefix, table_name, payload, now_iso))
+                    conn.commit()
+        except Exception as e:
+            print(f"[BACKUP PG ERROR] Failed to record write: {e}")
+
+    try:
+        with sqlite3.connect(SQLITE_DB) as conn:
+            conn.execute("""
+                INSERT INTO synapse_backup_records (tenant_prefix, table_name, payload, created_at)
+                VALUES (?, ?, ?, ?);
+            """, (tenant_prefix, table_name, payload, now_iso))
+            conn.commit()
+    except Exception as e:
+        print(f"[BACKUP SQLITE ERROR] Failed to record write: {e}")
+
+def restore_synapsedb_from_backup() -> int:
+    """Replays all persistent records back into SynapseDB on dyno boot or wake-up."""
+    records = []
+    if HAS_POSTGRES and pg_module:
+        try:
+            pg_url = DATABASE_URL.replace("postgres://", "postgresql://", 1) if DATABASE_URL.startswith("postgres://") else DATABASE_URL
+            with pg_module.connect(pg_url) as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT tenant_prefix, table_name, payload FROM synapse_backup_records ORDER BY id ASC;")
+                    records = cur.fetchall()
+        except Exception as e:
+            print(f"[RESTORE PG ERROR] Failed to fetch backup records: {e}")
+
+    if not records:
+        try:
+            with sqlite3.connect(SQLITE_DB) as conn:
+                cur = conn.cursor()
+                cur.execute("SELECT tenant_prefix, table_name, payload FROM synapse_backup_records ORDER BY id ASC;")
+                records = cur.fetchall()
+        except Exception as e:
+            print(f"[RESTORE SQLITE ERROR] Failed to fetch backup records: {e}")
+
+    if not records:
+        return 0
+
+    print(f"[RESTORE] Replaying {len(records)} records from Heroku persistent storage into SynapseDB...")
+    replayed = 0
+    for prefix, table, payload in records:
+        target_table = f"{prefix}{table}"
+        try:
+            execute_tcp(f"PUSH {target_table} {payload}", timeout=2.0)
+            replayed += 1
+        except Exception as e:
+            print(f"[RESTORE WARN] Replay error on {target_table}: {e}")
+
+    if replayed > 0:
+        try:
+            execute_tcp("FLUSH", timeout=3.0)
+            print(f"[RESTORE SUCCESS] Successfully flushed {replayed} records into SynapseDB columnar memory.")
+        except Exception as e:
+            print(f"[RESTORE WARN] Flush after restore error: {e}")
+
+    return replayed
+
+# -------------------------------------------------------------
 # Multi-Tenant Partitioning & Security Helpers
 # -------------------------------------------------------------
 SAFE_TABLE_REGEX = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,31}$")
@@ -485,9 +576,12 @@ def ensure_demo_data_seeded():
             ]
             for r in demo_rides:
                 execute_tcp(f"PUSH u_public_demo_rides {r}", timeout=2.0)
-            execute_tcp("PUSH u_public_demo_expenses coffee: 100, tea: 10, cab_cost: 500", timeout=2.0)
+                backup_record("u_public_demo_", "rides", r)
+            expense_item = "coffee: 100, tea: 10, cab_cost: 500"
+            execute_tcp(f"PUSH u_public_demo_expenses {expense_item}", timeout=2.0)
+            backup_record("u_public_demo_", "expenses", expense_item)
             execute_tcp("FLUSH", timeout=2.0)
-            print("[INFO] Pre-seeded isolated public demo partition (u_public_demo_rides)")
+            print("[INFO] Pre-seeded and backed up public demo partition (u_public_demo_rides)")
     except Exception as e:
         print(f"[WARN] Demo partition seed skipped: {e}")
 
@@ -841,6 +935,7 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
             try:
                 raw = execute_tcp(f"PUSH {target_table} {item}", timeout=5.0)
                 row_id = raw.strip().lstrip(":")
+                backup_record(tenant_prefix, table, item)
                 self._respond_json(200, {"ok": True, "table": table, "rowId": row_id, "raw": raw.strip()})
             except Exception as e:
                 self._respond_json(500, {"error": f"Ingestion error: {str(e)}"})
@@ -872,12 +967,42 @@ class SynapseGatewayHandler(BaseHTTPRequestHandler):
         pass
 
 if __name__ == "__main__":
+    import threading
     port = int(os.environ.get("PORT", "7860"))
     print(f"[SECURITY] SynapseDB Hardened Gateway with Multi-Tenant Partitioning listening on http://0.0.0.0:{port}")
     print(f"   - Rate Limit: {RATE_LIMIT_MAX} req/min (Auth: 15 req/min)")
     print(f"   - Max Payload: {MAX_PAYLOAD_BYTES / 1024:.1f} KB")
     print(f"   - Multi-Tenancy: Isolated user partitions with automatic prefix routing")
     print(f"   - Endpoints: /health, /query, /push, /schema, /auth/register, /auth/login, /auth/me, /auth/demo")
-    ensure_demo_data_seeded()
+
+    # 1. Wait for SynapseDB TCP engine to start
+    for _ in range(15):
+        try:
+            res = execute_tcp("PING", timeout=1.0)
+            if "PONG" in res:
+                break
+        except Exception:
+            time.sleep(0.5)
+
+    # 2. Replay all saved data from Heroku persistent storage into SynapseDB
+    restored_count = restore_synapsedb_from_backup()
+    if restored_count == 0:
+        ensure_demo_data_seeded()
+
+    # 3. Background watchdog thread: automatically re-restores if dyno woke from sleep with empty tables
+    def synapsedb_watchdog():
+        while True:
+            time.sleep(60)
+            try:
+                raw = execute_tcp("SCHEMA", timeout=3.0)
+                if '{"tables":[]}' in raw.replace(" ", ""):
+                    print("[WATCHDOG] Empty tables detected (dyno reset). Restoring from persistent storage...")
+                    restore_synapsedb_from_backup()
+            except Exception:
+                pass
+
+    watchdog_thread = threading.Thread(target=synapsedb_watchdog, daemon=True)
+    watchdog_thread.start()
+
     server = HTTPServer(("0.0.0.0", port), SynapseGatewayHandler)
     server.serve_forever()
