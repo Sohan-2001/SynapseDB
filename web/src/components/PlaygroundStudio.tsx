@@ -451,34 +451,34 @@ export default function PlaygroundStudio({
       {/* =====================================================================
           1. FIXED TOP NAVBAR (COMPACT & PROPERLY RESPONSIVE WITH HAMBURGER)
          ===================================================================== */}
-      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl px-3 sm:px-6 safe-px h-14 shadow-2xs">
-        <div className="max-w-7xl w-full h-full mx-auto flex items-center justify-between gap-2 sm:gap-4">
+      <header className="fixed top-0 inset-x-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-xl px-3 sm:px-6 safe-px h-13 sm:h-14 shadow-2xs">
+        <div className="max-w-7xl w-full h-full mx-auto flex items-center justify-between gap-1.5 sm:gap-4 min-w-0">
           
           {/* Logo & Online Status */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             <button
               onClick={onReturnToOverview}
-              className="flex items-center gap-2 group transition focus:outline-none"
+              className="flex items-center gap-1.5 sm:gap-2 group transition focus:outline-none shrink-0"
             >
-              <div className="w-7 h-7 rounded-full bg-black border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shadow-xs group-hover:scale-105 transition">
-                <Zap className="w-3.5 h-3.5 text-emerald-400 fill-current" />
+              <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold shadow-xs group-hover:scale-105 transition shrink-0">
+                <Zap className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400 fill-current" />
               </div>
-              <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-950">
+              <span className="font-extrabold text-sm sm:text-base tracking-tight text-slate-950">
                 SynapseDB
               </span>
-              <span className="hidden sm:inline-block text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
+              <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
                 Studio
               </span>
             </button>
 
             {/* Engine Live Status Pill (Zero Backend URL Exposed) */}
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100/90 text-xs font-medium text-slate-700">
-              <span className={`w-2 h-2 rounded-full ${connected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
-              <span className="text-[11px] font-semibold text-slate-800">
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-slate-100/90 text-xs font-medium text-slate-700 shrink-0">
+              <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${connected ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-800">
                 {connected ? "Online" : "Connecting"}
               </span>
               {pingLatency !== null && (
-                <span className="hidden xs:inline text-slate-500 text-[10px] font-mono">
+                <span className="hidden md:inline text-slate-500 text-[10px] font-mono">
                   ({pingLatency} ms)
                 </span>
               )}
@@ -486,10 +486,10 @@ export default function PlaygroundStudio({
           </div>
 
           {/* Desktop Right Actions (Hidden on Mobile) */}
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 shrink-0">
             <button
               onClick={seedSampleData}
-              className="min-h-[36px] px-3.5 py-1 rounded-full btn-glass-secondary text-slate-800 font-semibold text-xs transition flex items-center gap-1.5"
+              className="min-h-[34px] px-3.5 py-1 rounded-full btn-glass-secondary text-slate-800 font-semibold text-xs transition flex items-center gap-1.5"
               title="Seed sample rides and expenses"
             >
               <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
@@ -498,7 +498,7 @@ export default function PlaygroundStudio({
 
             <button
               onClick={handleFlushBuffers}
-              className="min-h-[36px] px-3.5 py-1 rounded-full btn-glass-secondary text-slate-800 font-semibold text-xs transition flex items-center gap-1.5"
+              className="min-h-[34px] px-3.5 py-1 rounded-full btn-glass-secondary text-slate-800 font-semibold text-xs transition flex items-center gap-1.5"
               title="Flush WAL buffers to columnar storage"
             >
               <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
@@ -507,7 +507,7 @@ export default function PlaygroundStudio({
 
             <button
               onClick={onReturnToOverview}
-              className="min-h-[36px] px-4 py-1 rounded-full btn-glass-dark font-semibold text-xs transition flex items-center gap-1.5 shadow-xs"
+              className="min-h-[34px] px-4 py-1 rounded-full btn-glass-dark font-semibold text-xs transition flex items-center gap-1.5 shadow-xs"
             >
               <ArrowLeft className="w-3 h-3 text-emerald-400" />
               <span>Overview</span>
@@ -522,7 +522,7 @@ export default function PlaygroundStudio({
                 <button
                   onClick={onSignOut}
                   title="Sign Out"
-                  className="min-h-[36px] px-2.5 py-1 rounded-full btn-glass-secondary text-slate-700 transition text-xs font-semibold flex items-center gap-1"
+                  className="min-h-[34px] px-2.5 py-1 rounded-full btn-glass-secondary text-slate-700 transition text-xs font-semibold flex items-center gap-1"
                 >
                   <LogOut className="w-3 h-3 text-slate-600" />
                 </button>
@@ -530,11 +530,20 @@ export default function PlaygroundStudio({
             )}
           </div>
 
-          {/* Mobile Hamburger Toggle (Visible Only on Mobile) */}
-          <div className="md:hidden flex items-center gap-2">
+          {/* Mobile Right Controls (< md) */}
+          <div className="md:hidden flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={onReturnToOverview}
+              className="px-2.5 py-1 rounded-full btn-glass-secondary text-slate-800 font-semibold text-[11px] flex items-center gap-1 transition"
+              title="Return to Overview"
+            >
+              <ArrowLeft className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span className="hidden xs:inline">Overview</span>
+            </button>
+
             <button
               onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-              className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full btn-glass-secondary text-slate-800 transition"
+              className="w-8 h-8 sm:w-9 sm:h-9 min-h-0 min-w-0 flex items-center justify-center rounded-full btn-glass-secondary text-slate-800 transition"
               aria-label="Toggle studio menu"
             >
               {mobileDrawerOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
@@ -545,8 +554,8 @@ export default function PlaygroundStudio({
 
         {/* Mobile Slide-down Drawer */}
         {mobileDrawerOpen && (
-          <div className="md:hidden absolute top-14 inset-x-0 bg-white border-b border-slate-200 shadow-xl p-4 flex flex-col gap-2.5 animate-in slide-in-from-top-2 duration-150">
-            <div className="flex items-center justify-between text-xs px-2 py-1 bg-slate-50 rounded-xl">
+          <div className="md:hidden absolute top-[52px] sm:top-14 inset-x-0 bg-white border-b border-slate-200 shadow-xl p-3.5 sm:p-4 flex flex-col gap-2.5 animate-in slide-in-from-top-2 duration-150 max-h-[calc(100vh-3.5rem)] overflow-y-auto">
+            <div className="flex items-center justify-between text-xs px-2.5 py-1.5 bg-slate-50 rounded-xl">
               <span className="font-semibold text-slate-700">Storage Engine:</span>
               <span className="text-emerald-700 font-bold flex items-center gap-1">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> SIMD Vectorized (Active)
@@ -554,59 +563,59 @@ export default function PlaygroundStudio({
             </div>
 
             {/* Mobile Tab Links */}
-            <div className="grid grid-cols-2 gap-2 text-xs font-semibold pt-1">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2 text-xs font-semibold pt-0.5">
               <button
                 onClick={() => { setActiveTab("query"); setMobileDrawerOpen(false); }}
-                className={`py-2 px-3 rounded-full text-left transition flex items-center gap-2 ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl text-left transition flex items-center gap-1.5 sm:gap-2 truncate ${
                   activeTab === "query" ? "bg-black text-emerald-400 font-bold" : "bg-slate-100 text-slate-800"
                 }`}
               >
-                <span>❯_</span> Query Studio
+                <span>❯_</span> <span className="truncate">Query Studio</span>
               </button>
               <button
                 onClick={() => { setActiveTab("ingest"); setMobileDrawerOpen(false); }}
-                className={`py-2 px-3 rounded-full text-left transition flex items-center gap-2 ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl text-left transition flex items-center gap-1.5 sm:gap-2 truncate ${
                   activeTab === "ingest" ? "bg-black text-emerald-400 font-bold" : "bg-slate-100 text-slate-800"
                 }`}
               >
-                <span>📥</span> Ingest Lab
+                <span>📥</span> <span className="truncate">Ingest Lab</span>
               </button>
               <button
                 onClick={() => { setActiveTab("browser"); setMobileDrawerOpen(false); }}
-                className={`py-2 px-3 rounded-full text-left transition flex items-center gap-2 ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl text-left transition flex items-center gap-1.5 sm:gap-2 truncate ${
                   activeTab === "browser" ? "bg-black text-emerald-400 font-bold" : "bg-slate-100 text-slate-800"
                 }`}
               >
-                <span>⊞</span> Data Browser
+                <span>⊞</span> <span className="truncate">Data Browser</span>
               </button>
               <button
                 onClick={() => { setActiveTab("schema"); setMobileDrawerOpen(false); }}
-                className={`py-2 px-3 rounded-full text-left transition flex items-center gap-2 ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl text-left transition flex items-center gap-1.5 sm:gap-2 truncate ${
                   activeTab === "schema" ? "bg-black text-emerald-400 font-bold" : "bg-slate-100 text-slate-800"
                 }`}
               >
-                <span>▦</span> Schema
+                <span>▦</span> <span className="truncate">Schema</span>
               </button>
               <button
                 onClick={() => { setActiveTab("health"); setMobileDrawerOpen(false); }}
-                className={`py-2 px-3 rounded-full text-left transition flex items-center gap-2 ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl text-left transition flex items-center gap-1.5 sm:gap-2 truncate ${
                   activeTab === "health" ? "bg-black text-emerald-400 font-bold" : "bg-slate-100 text-slate-800"
                 }`}
               >
-                <span>♥</span> Health
+                <span>♥</span> <span className="truncate">Health</span>
               </button>
               <button
                 onClick={() => { setActiveTab("docs"); setMobileDrawerOpen(false); }}
-                className={`py-2 px-3 rounded-full text-left transition flex items-center gap-2 ${
+                className={`py-2 px-2.5 sm:px-3 rounded-xl text-left transition flex items-center gap-1.5 sm:gap-2 truncate ${
                   activeTab === "docs" ? "bg-black text-emerald-400 font-bold" : "bg-slate-100 text-slate-800"
                 }`}
               >
-                <span>📖</span> Rules
+                <span>📖</span> <span className="truncate">Rules</span>
               </button>
             </div>
 
             {/* Mobile Actions */}
-            <div className="pt-2 border-t border-slate-100 flex flex-col gap-2">
+            <div className="pt-2 border-t border-slate-100 flex flex-col gap-1.5 sm:gap-2">
               <button
                 onClick={() => { seedSampleData(); setMobileDrawerOpen(false); }}
                 className="w-full py-2 rounded-full btn-glass-secondary text-xs font-semibold text-center flex items-center justify-center gap-1.5"
@@ -644,90 +653,98 @@ export default function PlaygroundStudio({
       {/* =====================================================================
           2. WORKSPACE CONTENT CONTAINER
          ===================================================================== */}
-      <main className="pt-16 pb-12 flex-1 flex flex-col max-w-7xl w-full mx-auto px-3 sm:px-6 safe-px gap-5 safe-container">
+      <main className="pt-16 pb-12 flex-1 flex flex-col max-w-7xl w-full mx-auto px-3 sm:px-6 safe-px gap-4 sm:gap-5 safe-container min-w-0">
         
         {/* Responsive Studio Navigation Tabs Bar */}
-        <div className="flex items-center border-b border-slate-200 gap-1 overflow-x-auto pb-0.5 scrollbar-none select-none">
-          <button
-            onClick={() => setActiveTab("query")}
-            className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
-              activeTab === "query"
-                ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
-                : "border-transparent text-slate-600 hover:text-slate-950"
-            }`}
-          >
-            <span>❯_</span>
-            <span>Query & Analytics</span>
-          </button>
+        <div className="w-full max-w-full min-w-0 border-b border-slate-200">
+          <div className="flex items-center gap-1 sm:gap-1.5 overflow-x-auto pb-0.5 scrollbar-none select-none scroll-smooth">
+            <button
+              onClick={() => setActiveTab("query")}
+              className={`whitespace-nowrap shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
+                activeTab === "query"
+                  ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
+                  : "border-transparent text-slate-600 hover:text-slate-950"
+              }`}
+            >
+              <span className="font-mono text-[11px] sm:text-xs">❯_</span>
+              <span>Query</span>
+              <span className="hidden sm:inline">&nbsp;& Analytics</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("ingest")}
-            className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
-              activeTab === "ingest"
-                ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
-                : "border-transparent text-slate-600 hover:text-slate-950"
-            }`}
-          >
-            <span>📥</span>
-            <span>Input & Ingest Lab</span>
-          </button>
+            <button
+              onClick={() => setActiveTab("ingest")}
+              className={`whitespace-nowrap shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
+                activeTab === "ingest"
+                  ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
+                  : "border-transparent text-slate-600 hover:text-slate-950"
+              }`}
+            >
+              <span className="text-xs">📥</span>
+              <span>Ingest</span>
+              <span className="hidden sm:inline">&nbsp;Lab</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("browser");
-              if (activeBrowserTable) loadBrowserTable(activeBrowserTable);
-            }}
-            className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
-              activeTab === "browser"
-                ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
-                : "border-transparent text-slate-600 hover:text-slate-950"
-            }`}
-          >
-            <TableIcon className="w-3.5 h-3.5" />
-            <span>Data Browser</span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab("browser");
+                if (activeBrowserTable) loadBrowserTable(activeBrowserTable);
+              }}
+              className={`whitespace-nowrap shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
+                activeTab === "browser"
+                  ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
+                  : "border-transparent text-slate-600 hover:text-slate-950"
+              }`}
+            >
+              <TableIcon className="w-3.5 h-3.5" />
+              <span>Browser</span>
+              <span className="hidden sm:inline">&nbsp;Data</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("schema");
-              loadAllSchema();
-            }}
-            className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
-              activeTab === "schema"
-                ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
-                : "border-transparent text-slate-600 hover:text-slate-950"
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Schema Explorer</span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab("schema");
+                loadAllSchema();
+              }}
+              className={`whitespace-nowrap shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
+                activeTab === "schema"
+                  ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
+                  : "border-transparent text-slate-600 hover:text-slate-950"
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Schema</span>
+              <span className="hidden sm:inline">&nbsp;Explorer</span>
+            </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("health");
-              testPingEngine();
-            }}
-            className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
-              activeTab === "health"
-                ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
-                : "border-transparent text-slate-600 hover:text-slate-950"
-            }`}
-          >
-            <Activity className="w-3.5 h-3.5" />
-            <span>Engine Telemetry</span>
-          </button>
+            <button
+              onClick={() => {
+                setActiveTab("health");
+                testPingEngine();
+              }}
+              className={`whitespace-nowrap shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
+                activeTab === "health"
+                  ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
+                  : "border-transparent text-slate-600 hover:text-slate-950"
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span>Telemetry</span>
+              <span className="hidden sm:inline">&nbsp;(Health)</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab("docs")}
-            className={`whitespace-nowrap shrink-0 flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
-              activeTab === "docs"
-                ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
-                : "border-transparent text-slate-600 hover:text-slate-950"
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Syntax & Rules</span>
-          </button>
+            <button
+              onClick={() => setActiveTab("docs")}
+              className={`whitespace-nowrap shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold border-b-2 transition ${
+                activeTab === "docs"
+                  ? "border-emerald-600 text-emerald-800 bg-emerald-50/80 rounded-t-xl"
+                  : "border-transparent text-slate-600 hover:text-slate-950"
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Rules</span>
+              <span className="hidden sm:inline">&nbsp;& Docs</span>
+            </button>
+          </div>
         </div>
 
         {/* =====================================================================
@@ -737,9 +754,9 @@ export default function PlaygroundStudio({
           <div className="flex flex-col gap-4">
             
             {/* Header Title & Mode Switcher */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950">
+                <h2 className="text-lg sm:text-2xl font-black tracking-tight text-slate-950">
                   Query & Analytics Studio
                 </h2>
                 <p className="text-xs text-slate-600 mt-0.5">
@@ -748,10 +765,10 @@ export default function PlaygroundStudio({
               </div>
 
               {/* Segmented Mode Switcher */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-full text-xs font-semibold self-start sm:self-auto border border-slate-200">
+              <div className="flex items-center bg-slate-100 p-0.5 sm:p-1 rounded-full text-xs font-semibold self-start sm:self-auto border border-slate-200">
                 <button
                   onClick={() => setQueryMode("SQL")}
-                  className={`px-3.5 py-1.5 rounded-full transition ${
+                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition ${
                     queryMode === "SQL" ? "bg-black text-white shadow-xs font-bold" : "text-slate-700 hover:text-slate-950"
                   }`}
                 >
@@ -759,26 +776,26 @@ export default function PlaygroundStudio({
                 </button>
                 <button
                   onClick={() => setQueryMode("NL")}
-                  className={`px-3.5 py-1.5 rounded-full transition flex items-center gap-1 ${
+                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition flex items-center gap-1 ${
                     queryMode === "NL" ? "bg-black text-white shadow-xs font-bold" : "text-slate-700 hover:text-slate-950"
                   }`}
                 >
-                  <Sparkles className="w-3 h-3 text-emerald-400" />
-                  <span>Natural Language (SLM)</span>
+                  <Sparkles className="w-3 h-3 text-emerald-400 shrink-0" />
+                  <span>Natural Language<span className="hidden xs:inline">&nbsp;(SLM)</span></span>
                 </button>
               </div>
             </div>
 
             {/* Quick Data Ingestion Bar Right Inside Query Studio (Allows Instant Input + Output) */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-2.5 shadow-2xs">
-              <div className="flex items-center justify-between">
+            <div className="p-3 sm:p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-2 sm:gap-2.5 shadow-2xs">
+              <div className="flex items-center justify-between gap-2">
                 <button
                   onClick={() => setShowQuickInsert(!showQuickInsert)}
-                  className="flex items-center gap-1.5 text-xs font-bold text-slate-900 hover:text-emerald-700 transition"
+                  className="flex items-center gap-1.5 text-xs font-bold text-slate-900 hover:text-emerald-700 transition truncate"
                 >
-                  <PlusCircle className="w-4 h-4 text-emerald-600" />
-                  <span>Quick Data Input (Insert record directly into table)</span>
-                  {showQuickInsert ? <ChevronUp className="w-3.5 h-3.5 text-slate-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                  <PlusCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span className="truncate">Quick Data Input<span className="hidden sm:inline">&nbsp;(Insert record directly into table)</span></span>
+                  {showQuickInsert ? <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />}
                 </button>
 
                 <div className="flex items-center gap-2 text-xs">
@@ -1320,9 +1337,9 @@ export default function PlaygroundStudio({
           <div className="flex flex-col gap-4">
             
             {/* Header & Table Selector Pills */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
               <div>
-                <h2 className="text-xl sm:text-2xl font-black tracking-tight text-slate-950">
+                <h2 className="text-lg sm:text-2xl font-black tracking-tight text-slate-950">
                   Data Browser
                 </h2>
                 <p className="text-xs text-slate-600 mt-0.5">
@@ -1337,7 +1354,7 @@ export default function PlaygroundStudio({
                   <button
                     key={t}
                     onClick={() => loadBrowserTable(t)}
-                    className={`min-h-[34px] px-4 py-1 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${
+                    className={`min-h-[30px] sm:min-h-[34px] px-3 sm:px-4 py-0.5 sm:py-1 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${
                       activeBrowserTable === t
                         ? "bg-black text-emerald-400 font-bold shadow-sm"
                         : "btn-glass-secondary text-slate-700"
@@ -1351,19 +1368,19 @@ export default function PlaygroundStudio({
             </div>
 
             {/* Action Bar (Search Filter & Exports) */}
-            <div className="aurora-card-subtle p-3 rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-xs">
-              <div className="relative flex-1 max-w-sm">
+            <div className="aurora-card-subtle p-2.5 sm:p-3 rounded-2xl flex flex-wrap items-center justify-between gap-2 sm:gap-3 shadow-xs">
+              <div className="relative flex-1 min-w-[180px] max-w-sm">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   value={browserSearch}
                   onChange={(e) => setBrowserSearch(e.target.value)}
                   placeholder={`Search in ${activeBrowserTable || "table"}...`}
-                  className="min-h-[38px] w-full bg-white border border-slate-300 rounded-full pl-9 pr-3.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:border-emerald-500"
+                  className="min-h-[34px] sm:min-h-[38px] w-full bg-white border border-slate-300 rounded-full pl-9 pr-3.5 py-1 text-xs text-slate-900 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 <select
                   value={browserLimit}
                   onChange={(e) => {
@@ -1371,7 +1388,7 @@ export default function PlaygroundStudio({
                     setBrowserLimit(l);
                     if (activeBrowserTable) loadBrowserTable(activeBrowserTable, l);
                   }}
-                  className="min-h-[38px] px-3.5 py-1 bg-white border border-slate-300 rounded-full text-xs font-medium text-slate-800"
+                  className="min-h-[34px] sm:min-h-[38px] px-2.5 sm:px-3.5 py-1 bg-white border border-slate-300 rounded-full text-xs font-medium text-slate-800"
                 >
                   <option value={50}>Limit 50</option>
                   <option value={100}>Limit 100</option>
@@ -1381,7 +1398,7 @@ export default function PlaygroundStudio({
 
                 <button
                   onClick={exportCSV}
-                  className="min-h-[38px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-full btn-glass-secondary text-xs font-semibold transition"
+                  className="min-h-[34px] sm:min-h-[38px] flex items-center gap-1 sm:gap-1.5 px-3 sm:px-3.5 py-1 rounded-full btn-glass-secondary text-xs font-semibold transition"
                 >
                   <Download className="w-3.5 h-3.5 text-emerald-600" />
                   <span>CSV</span>
@@ -1389,7 +1406,7 @@ export default function PlaygroundStudio({
 
                 <button
                   onClick={exportJSON}
-                  className="min-h-[38px] flex items-center gap-1.5 px-3.5 py-1.5 rounded-full btn-glass-secondary text-xs font-semibold transition"
+                  className="min-h-[34px] sm:min-h-[38px] flex items-center gap-1 sm:gap-1.5 px-3 sm:px-3.5 py-1 rounded-full btn-glass-secondary text-xs font-semibold transition"
                 >
                   <Copy className="w-3.5 h-3.5 text-emerald-600" />
                   <span>JSON</span>
@@ -1397,7 +1414,7 @@ export default function PlaygroundStudio({
 
                 <button
                   onClick={() => activeBrowserTable && loadBrowserTable(activeBrowserTable)}
-                  className="min-h-[38px] min-w-[38px] flex items-center justify-center rounded-full btn-glass-secondary text-slate-700 hover:text-slate-950 transition"
+                  className="min-h-[34px] sm:min-h-[38px] min-w-[34px] sm:min-w-[38px] flex items-center justify-center rounded-full btn-glass-secondary text-slate-700 hover:text-slate-950 transition"
                   title="Refresh table data"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />

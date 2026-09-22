@@ -407,10 +407,11 @@ export default function Database3DHero({ onExploreClick }: Database3DHeroProps) 
           </div>
 
           {/* Bottom Floating Hint */}
-          <div className="absolute bottom-3 inset-x-0 flex items-center justify-center pointer-events-none px-4">
-            <div className="px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/15 text-slate-300 text-[11px] flex items-center gap-2">
-              <Sparkles className="w-3 h-3 text-emerald-400" />
-              <span>Hover or move cursor over the 3D stack to explore memory & disk tiers</span>
+          <div className="absolute bottom-3 inset-x-0 flex items-center justify-center pointer-events-none px-3">
+            <div className="max-w-[calc(100%-1.5rem)] px-3 py-1 sm:py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-white/15 text-slate-300 text-[10px] sm:text-[11px] flex items-center gap-1.5 sm:gap-2">
+              <Sparkles className="w-3 h-3 text-emerald-400 shrink-0" />
+              <span className="truncate hidden sm:inline">Hover or move cursor over the 3D stack to explore memory & disk tiers</span>
+              <span className="truncate sm:hidden">Touch or drag 3D database tiers</span>
             </div>
           </div>
         </div>
