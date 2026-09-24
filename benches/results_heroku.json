@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-09-24T18:13:22Z",
+  "target": "heroku",
+  "endpoint": "https://synapsedb-api-fd3325cc9fd0.herokuapp.com",
+  "num_records": 500,
+  "num_queries": 50,
+  "num_nl_queries": 10,
+  "concurrency": 6,
+  "ingestion": {
+    "total_duration_sec": 26.7522,
+    "throughput_records_sec": 18.69,
+    "latency_ms": {
+      "min": 259.1478,
+      "p50": 276.5375,
+      "p90": 292.2979,
+      "p95": 359.933,
+      "p99": 1179.4104,
+      "max": 1245.5661,
+      "mean": 306.3587,
+      "stddev": 143.2407
+    }
+  },
+  "flush": {
+    "duration_ms": 279.381
+  },
+  "query_sum": {
+    "sql": "SELECT SUM(amount) FROM rides",
+    "sample_row": {
+      "SUM(amount)": 28097.5
+    },
+    "client_latency_ms": {
+      "min": 268.2303,
+      "p50": 274.1917,
+      "p90": 287.2068,
+      "p95": 290.3601,
+      "p99": 300.5031,
+      "max": 308.575,
+      "mean": 276.8076,
+      "stddev": 8.1352
+    },
+    "engine_execution_us": {
+      "min": 12,
+      "p50": 14.0,
+      "p90": 22.0,
+      "p95": 22.0,
+      "p99": 142.85,
+      "max": 258,
+      "mean": 20.68,
+      "stddev": 34.0854
+    }
+  },
+  "query_avg_filter": {
+    "sql": "SELECT AVG(amount) FROM rides WHERE amount > 30",
+    "sample_row": {
+      "AVG(amount)": 63.913366336633665
+    },
+    "client_latency_ms": {
+      "min": 267.5872,
+      "p50": 272.0978,
+      "p90": 284.8563,
+      "p95": 285.8024,
+      "p99": 286.6151,
+      "max": 286.9312,
+      "mean": 274.9477,
+      "stddev": 5.9076
+    },
+    "engine_execution_us": {
+      "min": 40,
+      "p50": 63.5,
+      "p90": 101.4,
+      "p95": 109.85,
+      "p99": 123.69,
+      "max": 133,
+      "mean": 65.56,
+      "stddev": 23.5883
+    }
+  },
+  "query_nl": {
+    "input": "What was the total fare paid in rides?",
+    "sample_row": {
+      "SUM(amount)": 28097.5
+    },
+    "client_latency_ms": {
+      "min": 270.1629,
+      "p50": 273.0439,
+      "p90": 285.8129,
+      "p95": 286.657,
+      "p99": 287.3324,
+      "max": 287.5012,
+      "mean": 276.3945,
+      "stddev": 6.4174
+    },
+    "engine_execution_us": {
+      "min": 11,
+      "p50": 13.5,
+      "p90": 18.2,
+      "p95": 19.1,
+      "p99": 19.82,
+      "max": 20,
+      "mean": 14.4,
+      "stddev": 2.9052
+    }
+  }
+}

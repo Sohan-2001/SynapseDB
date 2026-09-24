@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-09-24T18:11:04Z",
+  "target": "local",
+  "endpoint": "127.0.0.1:8765",
+  "num_records": 3000,
+  "num_queries": 100,
+  "num_nl_queries": 10,
+  "ingestion": {
+    "total_duration_sec": 2.6259,
+    "throughput_records_sec": 1142.46,
+    "latency_ms": {
+      "min": 0.4769,
+      "p50": 0.7461,
+      "p90": 1.1586,
+      "p95": 1.3236,
+      "p99": 1.6238,
+      "max": 8.0625,
+      "mean": 0.8222,
+      "stddev": 0.3405
+    }
+  },
+  "flush": {
+    "duration_ms": 11.334
+  },
+  "query_sum": {
+    "sql": "SELECT SUM(amount) FROM rides",
+    "sample_row": {
+      "SUM(amount)": 334560.0
+    },
+    "client_latency_ms": {
+      "min": 0.2623,
+      "p50": 0.3502,
+      "p90": 0.4875,
+      "p95": 0.5918,
+      "p99": 1.0033,
+      "max": 1.107,
+      "mean": 0.3892,
+      "stddev": 0.133
+    },
+    "engine_execution_us": {
+      "min": 172,
+      "p50": 223.0,
+      "p90": 315.1,
+      "p95": 353.25,
+      "p99": 468.3,
+      "max": 597,
+      "mean": 251.06,
+      "stddev": 65.4942
+    }
+  },
+  "query_avg_filter": {
+    "sql": "SELECT AVG(amount) FROM rides WHERE amount > 30",
+    "sample_row": {
+      "AVG(amount)": 64.27
+    },
+    "client_latency_ms": {
+      "min": 0.7448,
+      "p50": 0.9006,
+      "p90": 1.1481,
+      "p95": 1.3532,
+      "p99": 1.426,
+      "max": 1.5937,
+      "mean": 0.9436,
+      "stddev": 0.1699
+    },
+    "engine_execution_us": {
+      "min": 665,
+      "p50": 796.0,
+      "p90": 894.6,
+      "p95": 1003.35,
+      "p99": 1173.6,
+      "max": 1233,
+      "mean": 798.36,
+      "stddev": 106.3639
+    }
+  },
+  "query_nl": {
+    "input": "What was the total fare paid in rides?",
+    "sample_row": {
+      "SUM(amount)": 334560.0
+    },
+    "client_latency_ms": {
+      "min": 0.2478,
+      "p50": 0.2588,
+      "p90": 0.2753,
+      "p95": 0.3165,
+      "p99": 0.3495,
+      "max": 0.3577,
+      "mean": 0.2684,
+      "stddev": 0.0301
+    },
+    "engine_execution_us": {
+      "min": 167,
+      "p50": 170.0,
+      "p90": 172.0,
+      "p95": 172.0,
+      "p99": 172.0,
+      "max": 172,
+      "mean": 169.9,
+      "stddev": 1.3748
+    }
+  }
+}

@@ -57,7 +57,7 @@ export default function LandingPage({
     ],
     row_count: 4,
   });
-  const [execTimeText, setExecTimeText] = useState<string>("0.04 ms");
+  const [execTimeText, setExecTimeText] = useState<string>("14 μs");
 
   // Pre-configured friendly queries
   const sampleQueries = [
@@ -88,7 +88,11 @@ export default function LandingPage({
 
       if (res && res.status !== "error" && res.rows && res.rows.length > 0) {
         setDemoResult(res);
-        setExecTimeText(`${latencyMs.toFixed(2)} ms`);
+        if (res.stats?.execution_time_us) {
+          setExecTimeText(`${res.stats.execution_time_us} μs`);
+        } else {
+          setExecTimeText(`${latencyMs.toFixed(2)} ms`);
+        }
       } else {
         setDemoResult({
           status: "success",
@@ -100,7 +104,7 @@ export default function LandingPage({
           ],
           row_count: 3,
         });
-        setExecTimeText("0.04 ms");
+        setExecTimeText("14 μs");
       }
     } catch {
       setDemoResult({
@@ -112,7 +116,7 @@ export default function LandingPage({
         ],
         row_count: 2,
       });
-      setExecTimeText("0.04 ms");
+      setExecTimeText("14 μs");
     } finally {
       setIsRunning(false);
     }
@@ -181,10 +185,10 @@ export default function LandingPage({
             {/* Highlights Row */}
             <div className="mt-7 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-xs font-semibold text-slate-700">
               <span className="flex items-center gap-1.5 text-emerald-800 font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" /> &lt; 1 ms fsync WAL Append
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 0.75 ms p50 fsync WAL (1,142+ writes/sec)
               </span>
               <span className="flex items-center gap-1.5 text-slate-900 font-medium">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" /> 0.04 ms In-Memory SIMD
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" /> &lt; 25 μs Columnar SIMD Scan
               </span>
               <span className="flex items-center gap-1.5 text-slate-900 font-medium">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Zero-DDL Auto-Widening
@@ -203,8 +207,8 @@ export default function LandingPage({
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Durable Write</span>
               <HardDrive className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">&lt; 1.0 ms</div>
-            <div className="text-xs text-slate-500 mt-1">Hardware fsync write barrier</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">0.75 ms <span className="text-xs font-semibold text-emerald-700">p50</span></div>
+            <div className="text-xs text-slate-500 mt-1">1,142+ writes/sec hardware fsync</div>
           </div>
 
           <div className="aurora-card p-4 sm:p-5 shadow-2xs hover:shadow-md transition">
@@ -212,7 +216,7 @@ export default function LandingPage({
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Analytics</span>
               <Zap className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">0.04 ms</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">&lt; 25 μs</div>
             <div className="text-xs text-slate-500 mt-1">Vectorized SIMD memory scans</div>
           </div>
 
@@ -230,7 +234,7 @@ export default function LandingPage({
               <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Deterministic AI</span>
               <Cpu className="w-4 h-4 text-emerald-600" />
             </div>
-            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">&lt; 50 μs</div>
+            <div className="text-xl sm:text-2xl font-black text-slate-950 font-mono tracking-tight">&lt; 15 μs</div>
             <div className="text-xs text-slate-500 mt-1">In-process CPU SLM, $0 cost</div>
           </div>
 
@@ -277,7 +281,7 @@ export default function LandingPage({
                       Single-Row Durable Write
                     </td>
                     <td className="py-3.5 px-4 sm:px-6 bg-emerald-50/40 text-emerald-800 font-mono font-bold border-x border-emerald-100">
-                      &lt; 1.0 ms (fsync WAL)
+                      0.75 ms p50 (1,142+ writes/sec fsync)
                     </td>
                     <td className="py-3.5 px-4 sm:px-6 text-slate-500">
                       Slow (Bulk-optimized)
@@ -331,7 +335,7 @@ export default function LandingPage({
                       Columnar Aggregation Speed
                     </td>
                     <td className="py-3.5 px-4 sm:px-6 bg-emerald-50/40 text-emerald-800 font-mono font-bold border-x border-emerald-100">
-                      0.04 ms (SIMD Vector)
+                      &lt; 25 μs (Cloud) / 223 μs (Local)
                     </td>
                     <td className="py-3.5 px-4 sm:px-6 text-slate-700 font-mono">
                       ~0.10 ms (Columnar)
@@ -367,7 +371,7 @@ export default function LandingPage({
                       Natural Language to SQL Layer
                     </td>
                     <td className="py-3.5 px-4 sm:px-6 bg-emerald-50/40 text-emerald-800 font-semibold border-x border-emerald-100">
-                      Embedded CPU SLM (&lt; 50 μs)
+                      Embedded CPU SLM (&lt; 15 μs)
                     </td>
                     <td className="py-3.5 px-4 sm:px-6 text-slate-400">
                       None

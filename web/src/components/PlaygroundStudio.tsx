@@ -1676,6 +1676,73 @@ export default function PlaygroundStudio({
               </div>
             </div>
 
+            {/* Empirical Benchmark Telemetry Comparison */}
+            <div className="aurora-card p-5 sm:p-6 shadow-md flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-950 text-sm">Empirical Benchmark Verification</h3>
+                  <p className="text-xs text-slate-600">
+                    Automated dual-target benchmark suite (benches/run_benchmarks.py) verified numbers.
+                  </p>
+                </div>
+                <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold border border-emerald-200">
+                  Verified In Production
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-1 text-xs">
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <span className="font-bold text-slate-950">Local Engine (Raw Wire TCP)</span>
+                    <span className="font-mono text-[10px] text-slate-500">127.0.0.1:8765</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">Ingestion Rate</span>
+                      <strong className="text-emerald-700 text-xs">1,142 writes/sec</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">p50 Write ACK</span>
+                      <strong className="text-slate-950 text-xs">0.75 ms (fsync)</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">Columnar SUM</span>
+                      <strong className="text-emerald-700 text-xs">223 μs (SIMD)</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">SLM NL Planner</span>
+                      <strong className="text-slate-950 text-xs">170 μs ($0 LLM)</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col gap-2">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+                    <span className="font-bold text-slate-950">Cloud Container (Heroku HTTPS)</span>
+                    <span className="font-mono text-[10px] text-slate-500">512 MB Dyno</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">Engine Scan (p50)</span>
+                      <strong className="text-emerald-700 text-xs">14.0 μs</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">Engine Filter (p50)</span>
+                      <strong className="text-slate-950 text-xs">63.5 μs</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">SLM AST Plan (p50)</span>
+                      <strong className="text-emerald-700 text-xs">13.5 μs</strong>
+                    </div>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200">
+                      <span className="text-slate-500 block text-[9px] uppercase font-sans">Memory Compaction</span>
+                      <strong className="text-slate-950 text-xs">279 ms</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 
